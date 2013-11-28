@@ -2,13 +2,13 @@ package com.warrenstrange.googleauth;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Random;
+import java.security.SecureRandom;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Java Server side class for Google Authenticator's TOTP generator 
@@ -20,13 +20,13 @@ import org.apache.commons.codec.binary.Base32;
  * @see http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt
  */
 public class GoogleAuthenticator {
-		
-	// taken from Google pam docs - we probably don't need to mess with these
-	final static int secretSize = 10;
-	final static int numOfScratchCodes = 5;
-	final static int scratchCodeSize = 8;
-	
-	int window_size =3;  // default 3 - max 17 (from google docs)
+
+  // taken from Google pam docs - we probably don't need to mess with these
+	public static final int SECRET_SIZE = 10;
+  public static final String SEED = "g8GjEvTbW5oVSV7avLBdwIHqGlUYNzKFI7izOF8GwLDVKs2m0QN7vxRs2im5MDaNCWGmcD2rvcZx";
+  public static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
+
+  int window_size =3;  // default 3 - max 17 (from google docs)
 	
 	/**
 	 * set the windows size. This is an integer value representing the number of 30 second windows we allow
@@ -46,20 +46,21 @@ public class GoogleAuthenticator {
 	 * @return secret key
 	 */
 	public static String generateSecretKey() {
-		// Allocating the buffer
-		byte[] buffer = new byte[secretSize + numOfScratchCodes* scratchCodeSize];
 
-		// Filling the buffer with random numbers.
-		// Notice: you want to reuse the same random generator
-		// while generating larger random number sequences.
-		new Random().nextBytes(buffer);
+    SecureRandom sr = null;
+    try {
+      sr = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM);
+      sr.setSeed(Base64.decodeBase64(SEED));
+      byte[] buffer = sr.generateSeed(SECRET_SIZE);
+      Base32 codec = new Base32();
+      byte[] bEncodedKey = codec.encode(buffer);
+      String encodedKey = new String(bEncodedKey);
+      return encodedKey;
 
-		// Getting the key and converting it to Base32
-		Base32 codec = new Base32();
-		byte[] secretKey = Arrays.copyOf(buffer, secretSize);
-		byte[] bEncodedKey = codec.encode(secretKey);
-		String encodedKey = new String(bEncodedKey);
-		return encodedKey;
+    } catch (NoSuchAlgorithmException e) {
+      // should never occur... configuration error
+    }
+    return null;
 	}
 
 	/**
