@@ -8,6 +8,9 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,11 +76,21 @@ public final class GoogleAuthenticator {
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
 
     /**
+     * Minimum validation window size.
+     */
+    public static final int MIN_WINDOW = 1;
+
+    /**
+     * Maximum validation window size.
+     */
+    public static final int MAX_WINDOW = 17;
+
+    /**
      * The initial windowSize used when validating the codes. We are using
      * Google's default behaviour of using a window size equal to 3. The maximum
      * window size is 17.
      */
-    private int windowSize = 3;
+    private AtomicInteger windowSize = new AtomicInteger(3);
 
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
@@ -100,6 +113,12 @@ public final class GoogleAuthenticator {
      * Modulus of the secret key.
      */
     public static final int SECRET_KEY_MODULE = 1000 * 1000;
+
+    /**
+     * The number of seconds a key is valid.
+     */
+    public static final long KEY_VALIDATION_INTERVAL_MS =
+            TimeUnit.SECONDS.toMillis(30);
 
     public GoogleAuthenticator() {
 
@@ -212,6 +231,7 @@ public final class GoogleAuthenticator {
 
         // Building the validation code.
         int offset = hash[20 - 1] & 0xF;
+        // We are using a long because Java hasn't got an unsigned integer type.
         long truncatedHash = 0;
 
         for (int i = 0; i < 4; ++i) {
@@ -232,83 +252,165 @@ public final class GoogleAuthenticator {
         return (int) truncatedHash;
     }
 
-    private static int verify_code(byte[] key, long t)
-            throws NoSuchAlgorithmException, InvalidKeyException {
-        byte[] data = new byte[8];
-        long value = t;
-        for (int i = 8; i-- > 0; value >>>= 8) {
-            data[i] = (byte) value;
-        }
-
-        SecretKeySpec signKey = new SecretKeySpec(key, "HmacSHA1");
-        Mac mac = Mac.getInstance("HmacSHA1");
-        mac.init(signKey);
-        byte[] hash = mac.doFinal(data);
-
-        int offset = hash[20 - 1] & 0xF;
-
-        // We're using a long because Java hasn't got unsigned int.
-        long truncatedHash = 0;
-        for (int i = 0; i < 4; ++i) {
-            truncatedHash <<= 8;
-            // We are dealing with signed bytes:
-            // we just keep the first byte.
-            truncatedHash |= (hash[offset + i] & 0xFF);
-        }
-
-        truncatedHash &= 0x7FFFFFFF;
-        truncatedHash %= 1000000;
-
-        return (int) truncatedHash;
-    }
-
     /**
-     * set the windows size. This is an integer value representing the number of 30 second windows we allow
-     * The bigger the window, the more tolerant of clock skew we are.
+     * Set the default window size used by this instance when an explicit value
+     * is not specified. This is an integer value representing the number of 30
+     * second windows we check during the validation process, to account for
+     * differences between the server and the client clocks.
+     * The bigger the window, the more tolerant we are about clock skews.
      *
      * @param s window size - must be >=1 and <=17.  Other values are ignored
      */
     public void setWindowSize(int s) {
-        if (s >= 1 && s <= 17)
-            windowSize = s;
+        if (s >= MIN_WINDOW && s <= MAX_WINDOW) {
+            windowSize = new AtomicInteger(s);
+        } else {
+            throw new GoogleAuthenticatorException(
+                    String.format("Invalid window size: %d", s));
+        }
     }
 
     /**
-     * Check the code entered by the user to see if it is valid
+     * Get the default window size used by this instance when an explicit value
+     * is not specified.
      *
-     * @param secret   The users secret.
-     * @param code     The code displayed on the users device
-     * @param timeMsec The time in msec (System.currentTimeMillis() for example)
-     * @return <code>true</code> if validation succeeds, <code>false</code> otherwise.
+     * @return the current window size.
      */
-    public boolean check_code(String secret, long code, long timeMsec) {
+    public int getWindowSize() {
+        return windowSize.get();
+    }
+
+    /**
+     * Checks a verification code against a secret key using the current time.
+     * The algorithm also checks in a time window whose size determined by the
+     * <code>windowSize</code> property of this class.
+     * <p/>
+     * We are using Google's default value of 30 seconds for the interval size.
+     *
+     * @param secret           the Base32 encoded secret key.
+     * @param verificationCode the verification code.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws GoogleAuthenticatorException if a failure occurs during the
+     *                                      calculation of the validation code.
+     *                                      The only failures that should occur
+     *                                      are related with the cryptographic
+     *                                      functions provided by the JCE.
+     * @see #getWindowSize()
+     */
+    public boolean authorize(String secret, int verificationCode)
+            throws GoogleAuthenticatorException {
+        return authorize(secret, verificationCode, this.windowSize.get());
+    }
+
+    /**
+     * Checks a verification code against a secret key using the current time.
+     * The algorithm also checks in a time window whose size is fixed to a value
+     * of [-(window - 1)/2, +(window - 1)/2] time intervals. The maximum size of
+     * the window is specified by the <code>MAX_WINDOW</code> constant and
+     * cannot be overridden.
+     * <p/>
+     * We are using Google's default value of 30 seconds for the interval size.
+     *
+     * @param secret           the Base32 encoded secret key.
+     * @param verificationCode the verification code.
+     * @param window           the window size to use during the validation process.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws GoogleAuthenticatorException if a failure occurs during the
+     *                                      calculation of the validation code.
+     *                                      The only failures that should occur
+     *                                      are related with the cryptographic
+     *                                      functions provided by the JCE.
+     * @see GoogleAuthenticator#MAX_WINDOW
+     */
+    public static boolean authorize(
+            String secret,
+            int verificationCode,
+            int window)
+            throws GoogleAuthenticatorException {
+        // Checking user input and failing if the secret key was not provided.
+        if (secret == null) {
+            throw new GoogleAuthenticatorException("Secret cannot be null.");
+        }
+
+        // Checking if the verification code is between the legal bounds.
+        if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
+            return false;
+        }
+
+        // Checking if the window size is between the legal bounds.
+        if (window < MIN_WINDOW || window > MAX_WINDOW) {
+            throw new GoogleAuthenticatorException("Invalid window size.");
+        }
+
+        try {
+            // Checking the validation code using the current UNIX time.
+            return checkCode(
+                    secret,
+                    verificationCode,
+                    new Date().getTime(),
+                    window);
+        } catch (NoSuchAlgorithmException ex) {
+            // Logging the exception.
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+            // We're not disclosing internal error details to our clients.
+            throw new UnsupportedOperationException("The operation cannot be "
+                    + "performed now.");
+        } catch (InvalidKeyException ex) {
+            // Logging the exception.
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+            // Informing the user that the provided secret key has been
+            // recognized as invalid by the JCE framework.
+            throw new UnsupportedOperationException("The operation cannot be "
+                    + "performed: the secret key is invalid.");
+        }
+    }
+
+    /**
+     * This method implements the algorithm specified in RFC 6238 to check if a
+     * validation code is valid in a given instant of time for the given secret
+     * key.
+     *
+     * @param secret the Base32 encoded secret key.
+     * @param code   the code to validate.
+     * @param tm     the instant of time to use during the validation process.
+     * @param window the window size to use during the validation process.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws NoSuchAlgorithmException if the algorithm using during the
+     *                                  validation process (HmacSHA1) is not available.
+     * @throws InvalidKeyException      if the secret key specification is invalid.
+     */
+    private static boolean checkCode(
+            String secret,
+            long code,
+            long tm,
+            int window)
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        // Decoding the secret key to get its raw byte representation.
         Base32 codec = new Base32();
         byte[] decodedKey = codec.decode(secret);
 
-        // convert unix msec time into a 30 second "window"
-        // this is per the TOTP spec (see the RFC for details)
-        long t = (timeMsec / 1000L) / 30L;
-        // Window is used to check codes generated in the near past.
-        // You can use this value to tune how far you're willing to go.
+        // convert unix time into a 30 second "window" as specified by the
+        // TOTP specification. Using Google's default interval of 30 seconds.
+        final long timeWindow = tm / KEY_VALIDATION_INTERVAL_MS;
 
-        for (int i = -windowSize; i <= windowSize; ++i) {
-            long hash;
-            try {
-                hash = verify_code(decodedKey, t + i);
-            } catch (Exception e) {
-                // Yes, this is bad form - but
-                // the exceptions thrown would be rare and a static configuration problem
-                e.printStackTrace();
-                throw new RuntimeException(e.getMessage());
-                //return false;
-            }
+        // Calculating the verification code of the given key in each of the
+        // time intervals and returning true if the provided code is equal to
+        // one of them.
+        for (int i = -((window - 1) / 2); i <= window / 2; ++i) {
+            // Calculating the verification code for the current time interval.
+            long hash = calculateCode(decodedKey, timeWindow + i);
 
+            // Checking if the provided code is equal to the calculated one.
             if (hash == code) {
+                // The verification code is valid.
                 return true;
             }
         }
 
-        // The validation code is invalid.
+        // The verification code is invalid.
         return false;
     }
 }
