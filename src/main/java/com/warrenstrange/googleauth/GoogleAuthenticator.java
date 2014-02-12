@@ -30,6 +30,8 @@ import java.util.logging.Logger;
  * Java Server side class for Google Authenticator's TOTP generator was inspired
  * by an author's blog post.
  *
+ * @author Enrico M. Crisostomo
+ * @author Warren Strange
  * @version 1.0
  * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
  * @see <a href="http://code.google.com/p/google-authenticator" />
@@ -135,6 +137,10 @@ public final class GoogleAuthenticator {
         reSeed();
     }
 
+    /**
+     * Reseed the internal random number generator in order to improve its long
+     * term security.
+     */
     public void reSeed() {
         secureRandom.setSeed(secureRandom.generateSeed(SEED_SIZE));
     }
