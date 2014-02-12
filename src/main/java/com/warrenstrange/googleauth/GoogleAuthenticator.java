@@ -7,6 +7,9 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
@@ -31,6 +34,12 @@ import java.security.SecureRandom;
  * @since 1.0
  */
 public final class GoogleAuthenticator {
+
+    /**
+     * The logger for this class.
+     */
+    private static final Logger LOGGER =
+            Logger.getLogger(GoogleAuthenticator.class.getName());
 
     /**
      * The number of bits of a secret key in binary form. Since the Base32
@@ -80,6 +89,18 @@ public final class GoogleAuthenticator {
      */
     private SecureRandom secureRandom;
 
+    /**
+     * Cryptographic hash function used to calculate the HMAC (Hash-based
+     * Message Authentication Code). This implementation uses the SHA1 hash
+     * function.
+     */
+    public static final String HMAC_HASH_FUNCTION = "HmacSHA1";
+
+    /**
+     * Modulus of the secret key.
+     */
+    public static final int SECRET_KEY_MODULE = 1000 * 1000;
+
     public GoogleAuthenticator() {
 
         try {
@@ -108,7 +129,7 @@ public final class GoogleAuthenticator {
      *
      * @return secret key
      */
-    public String generateSecretKey() {
+    public GoogleAuthenticatorKey generateSecretKey() {
 
         // Allocating a buffer sufficiently large to hold the bytes required by
         // the secret key and the scratch codes.
@@ -117,25 +138,98 @@ public final class GoogleAuthenticator {
 
         secureRandom.nextBytes(buffer);
 
-        Base32 codec = new Base32();
-        byte[] bEncodedKey = codec.encode(buffer);
+        // Extracting the bytes making up the secret key.
+        byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
 
-        return new String(bEncodedKey);
+        Base32 codec = new Base32();
+        byte[] encodedKey = codec.encode(secretKey);
+
+        // Creating a string with the Base32 encoded bytes.
+        final String generatedKey = new String(encodedKey);
+
+        // Generating the verification code at time = 0.
+        int generateCode;
+
+        try {
+            generateCode = calculateCode(secretKey, 0);
+        } catch (NoSuchAlgorithmException ex) {
+            // Logging the exception.
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+
+            // We're not disclosing internal error details to our clients.
+            throw new GoogleAuthenticatorException("The operation cannot be "
+                    + "performed now.");
+        } catch (InvalidKeyException ex) {
+            // Logging the exception
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+
+            // We're not disclosing internal error details to our clients.
+            throw new GoogleAuthenticatorException("The operation cannot be "
+                    + "performed now.");
+        }
+
+        return new GoogleAuthenticatorKey(generatedKey, generateCode);
     }
 
     /**
-     * Return a URL that generates and displays a QR barcode. The user scans this bar code with the
-     * Google Authenticator application on their smart phones to register the auth code. They can also manually enter
-     * the secret manually if desired.
+     * Calculates the verification code of the provided key at the specified
+     * instant of time using the algorithm specified in RFC 6238.
      *
-     * @param user   the user identifier.
-     * @param host   host or system that the code is associated to.
-     * @param secret the secret that was previously generated for this user.
-     * @return the URL for the QR code to scan.
+     * @param key the secret key in binary format.
+     * @param tm  the instant of time.
+     * @return the validation code for the provided key at the specified instant
+     * of time.
+     * @throws NoSuchAlgorithmException if the algorithm using during the
+     *                                  validation process (HmacSHA1) is not
+     *                                  available.
+     * @throws InvalidKeyException      if the secret key specification is
+     *                                  invalid.
      */
-    public static String getQRBarcodeURL(String user, String host, String secret) {
-        String format = "https://www.google.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=otpauth://totp/%s@%s%%3Fsecret%%3D%s";
-        return String.format(format, user, host, secret);
+    private static int calculateCode(byte[] key, long tm)
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        // Allocating an array of bytes to represent the specified instant
+        // of time.
+        byte[] data = new byte[8];
+        long value = tm;
+
+        // Converting the instant of time from the long representation to an
+        // array of bytes.
+        for (int i = 8; i-- > 0; value >>>= 8) {
+            data[i] = (byte) value;
+        }
+
+        // Building the secret key specification for the HmacSHA1 algorithm.
+        SecretKeySpec signKey = new SecretKeySpec(key, HMAC_HASH_FUNCTION);
+
+        // Getting an HmacSHA1 algorithm implementation from the JCE.
+        Mac mac = Mac.getInstance(HMAC_HASH_FUNCTION);
+
+        // Initializing the MAC algorithm.
+        mac.init(signKey);
+
+        // Processing the instant of time and getting the encrypted data.
+        byte[] hash = mac.doFinal(data);
+
+        // Building the validation code.
+        int offset = hash[20 - 1] & 0xF;
+        long truncatedHash = 0;
+
+        for (int i = 0; i < 4; ++i) {
+            //truncatedHash = (truncatedHash * 256) & 0xFFFFFFFF;
+            truncatedHash <<= 8;
+
+            // Java bytes are signed but we need an unsigned one:
+            // cleaning off all but the LSB.
+            truncatedHash |= (hash[offset + i] & 0xFF);
+        }
+
+        // Cleaning bits higher than 32nd and calculating the module with the
+        // maximum validation code value.
+        truncatedHash &= 0x7FFFFFFF;
+        truncatedHash %= SECRET_KEY_MODULE;
+
+        // Returning the validation code to the caller.
+        return (int) truncatedHash;
     }
 
     private static int verify_code(byte[] key, long t)
