@@ -1,7 +1,6 @@
 package com.warrenstrange.googleauth;
 
 import org.apache.commons.codec.binary.Base32;
-import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -13,56 +12,115 @@ import java.security.SecureRandom;
  * This class implements the functionality described in RFC 6238 (TOTP: Time
  * based one-time password algorithm) and has been tested again Google's
  * implementation of such algorithm in its Google Authenticator application.
- *
+ * <p/>
  * This class lets users create a new 16-bit base32-encoded secret key with
  * the validation code calculated at time=0 (the UNIX epoch) and the URL of a
  * Google-provided QR barcode to let an user load the generated information into
  * Google Authenticator.
- *
+ * <p/>
  * This class doesn't store in any way either the generated keys nor the keys
  * passed during the authorization process.
- *
+ * <p/>
  * Java Server side class for Google Authenticator's TOTP generator was inspired
  * by an author's blog post.
  *
+ * @version 1.0
  * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
  * @see <a href="http://code.google.com/p/google-authenticator" />
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
- * @version 1.0
- *
  * @since 1.0
  */
-public class GoogleAuthenticator {
+public final class GoogleAuthenticator {
 
-    // taken from Google pam docs - we probably don't need to mess with these
-    private static final int SECRET_SIZE = 10;
-    private static final String SEED = "g8GjEvTbW5oVSV7avLBdwIHqGlUYNzKFI7izOF8GwLDVKs2m0QN7vxRs2im5MDaNCWGmcD2rvcZx";
+    /**
+     * The number of bits of a secret key in binary form. Since the Base32
+     * encoding with 8 bit characters introduces an 160% overhead, we just need
+     * 80 bits (8 bytes) to generate a 16 bytes Base32-encoded secret key.
+     */
+    private static final int SECRET_BITS = 80;
+
+    /**
+     * Number of scratch codes to generate during the key generation.
+     * We are using Google's default of providing 5 scratch codes.
+     */
+    private static final int SCRATCH_CODES = 5;
+
+    /**
+     * Length in bytes of each scratch code. We're using Google's default of
+     * using 4 bytes per scratch code.
+     */
+    private static final int BYTES_PER_SCRATCH_CODE = 4;
+
+    /**
+     * The size of the seed which is fed to the SecureRandom instance, in bytes.
+     */
+    private static final int SEED_SIZE = 128;
+
+    /**
+     * The SecureRandom algorithm to use.
+     *
+     * @see java.security.SecureRandom#getInstance(String)
+     */
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
-    private int windowSize = 3;  // default 3 - max 17 (from google docs)
+
+    /**
+     * The initial windowSize used when validating the codes. We are using
+     * Google's default behaviour of using a window size equal to 3. The maximum
+     * window size is 17.
+     */
+    private int windowSize = 3;
+
+    /**
+     * The internal SecureRandom instance used by this class. Since as of Java 7
+     * Random instances are required to be thread-safe, no synchronisation is
+     * required in the methods of this class using this instance. Thread-safety
+     * of this class was a de-facto standard in previous versions of Java so
+     * that it is expected to work correctly in previous versions of the Java
+     * platform as well.
+     */
+    private SecureRandom secureRandom;
+
+    public GoogleAuthenticator() {
+
+        try {
+            secureRandom = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new GoogleAuthenticatorException(
+                    String.format(
+                            "Could not initialise SecureRandom " +
+                                    "with the specified algorithm: %s",
+                            RANDOM_NUMBER_ALGORITHM), e);
+        }
+
+        reSeed();
+    }
+
+    public void reSeed() {
+        secureRandom.setSeed(secureRandom.generateSeed(SEED_SIZE));
+    }
 
     /**
      * Generate a random secret key. This must be saved by the server and
      * associated with the users account to verify the code displayed by
      * Google Authenticator.
-     *
+     * <p/>
      * The user must register this secret on their device.
      *
      * @return secret key
      */
-    public static String generateSecretKey() {
+    public String generateSecretKey() {
 
-        try {
-            SecureRandom sr = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM);
-            sr.setSeed(Base64.decodeBase64(SEED));
-            byte[] buffer = sr.generateSeed(SECRET_SIZE);
-            Base32 codec = new Base32();
-            byte[] bEncodedKey = codec.encode(buffer);
+        // Allocating a buffer sufficiently large to hold the bytes required by
+        // the secret key and the scratch codes.
+        byte[] buffer =
+                new byte[SECRET_BITS / 8 + SCRATCH_CODES * BYTES_PER_SCRATCH_CODE];
 
-            return new String(bEncodedKey);
-        } catch (NoSuchAlgorithmException e) {
-            // should never occur... configuration error
-        }
-        return null;
+        secureRandom.nextBytes(buffer);
+
+        Base32 codec = new Base32();
+        byte[] bEncodedKey = codec.encode(buffer);
+
+        return new String(bEncodedKey);
     }
 
     /**
