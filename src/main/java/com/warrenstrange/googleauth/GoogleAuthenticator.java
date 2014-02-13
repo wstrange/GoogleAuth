@@ -49,7 +49,7 @@ public final class GoogleAuthenticator {
     /**
      * The number of bits of a secret key in binary form. Since the Base32
      * encoding with 8 bit characters introduces an 160% overhead, we just need
-     * 80 bits (8 bytes) to generate a 16 bytes Base32-encoded secret key.
+     * 80 bits (10 bytes) to generate a 16 bytes Base32-encoded secret key.
      */
     private static final int SECRET_BITS = 80;
 
