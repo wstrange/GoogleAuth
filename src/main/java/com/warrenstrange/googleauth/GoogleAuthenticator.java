@@ -62,6 +62,11 @@ public final class GoogleAuthenticator {
     private static final int SCRATCH_CODES = 5;
 
     /**
+     * Number of digits of a scratch code represented as a decimal integer.
+     */
+    private static final int SCRATCH_CODE_LENGTH = 8;
+
+    /**
      * Length in bytes of each scratch code. We're using Google's default of
      * using 4 bytes per scratch code.
      */
@@ -114,9 +119,14 @@ public final class GoogleAuthenticator {
     public static final String HMAC_HASH_FUNCTION = "HmacSHA1";
 
     /**
-     * Modulus of the secret key.
+     * Modulus used to truncate the secret key.
      */
     public static final int SECRET_KEY_MODULE = 1000 * 1000;
+
+    /**
+     * Modulus used to truncate the scratch code.
+     */
+    public static final int SCRATCH_CODE_MODULUS = (int) Math.pow(10, SCRATCH_CODE_LENGTH);
 
     /**
      * The number of seconds a key is valid.
@@ -167,22 +177,43 @@ public final class GoogleAuthenticator {
 
         // Extracting the bytes making up the secret key.
         byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
-        String generatedKey = extractSecretKey(secretKey);
+        String generatedKey = calculateSecretKey(secretKey);
 
         // Generating the verification code at time = 0.
         int validationCode = calculateValidationCode(secretKey);
 
         // Calculate scratch codes
-        // List<Integer> scratchCodes = calculateScratchCodes(buffer);
+        List<Integer> scratchCodes = calculateScratchCodes(buffer);
 
-        return new GoogleAuthenticatorKey(generatedKey, validationCode);
+        return new GoogleAuthenticatorKey(generatedKey, validationCode, scratchCodes);
+    }
+
+    private List<Integer> calculateScratchCodes(byte[] buffer) {
+        List<Integer> scratchCodes = new ArrayList<Integer>();
+
+        while (scratchCodes.size() < SCRATCH_CODES) {
+            int scratchCode = 0;
+
+            for (int i = 0; i < BYTES_PER_SCRATCH_CODE; ++i) {
+                scratchCode <<= 8;
+                scratchCode += buffer[SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size() + i];
+            }
+
+            scratchCode = (scratchCode & 0x7FFFFFFF) % SCRATCH_CODE_MODULUS;
+
+            if (scratchCode >= SCRATCH_CODE_MODULUS / 10) {
+                scratchCodes.add(scratchCode);
+            }
+        }
+
+        return scratchCodes;
     }
 
     private int calculateValidationCode(byte[] secretKey) {
         return calculateCode(secretKey, 0);
     }
 
-    private String extractSecretKey(byte[] secretKey) {
+    private String calculateSecretKey(byte[] secretKey) {
         Base32 codec = new Base32();
         byte[] encodedKey = codec.encode(secretKey);
 

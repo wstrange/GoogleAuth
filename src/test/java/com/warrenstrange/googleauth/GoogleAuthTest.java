@@ -22,8 +22,8 @@ import org.junit.Test;
 public class GoogleAuthTest {
 
     // Change this to the saved secret from the running the above test.
-    private static String savedSecret = "VV5OVNP4S42DQSS3";
-    private static int currentCode = 863311;
+    private static String savedSecret = "CBN54QPAB5LMWMQO";
+    private static int currentCode = 808259;
 
     @Test
     public void genSecretTest() {
