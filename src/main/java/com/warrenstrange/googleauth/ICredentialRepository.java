@@ -11,7 +11,7 @@ public interface ICredentialRepository {
      * @param userName the user whose private key shall be retrieved.
      * @return the private key of the specified user.
      */
-    String getSecretKey(String username);
+    String getSecretKey(String userName);
 
     /**
      * This method saves the user credentials.
