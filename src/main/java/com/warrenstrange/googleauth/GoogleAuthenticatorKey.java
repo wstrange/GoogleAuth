@@ -17,7 +17,7 @@ import java.util.List;
  * @see GoogleAuthenticator
  * @since 1.0
  */
-public class GoogleAuthenticatorKey {
+public final class GoogleAuthenticatorKey {
 
     /**
      * The format string to generate the URL of a Google-provided QR bar code.
@@ -29,17 +29,17 @@ public class GoogleAuthenticatorKey {
     /**
      * The secret key in Base32 encoding.
      */
-    private String key;
+    private final String key;
 
     /**
      * The verification code at time = 0 (the UNIX epoch).
      */
-    private int verificationCode;
+    private final int verificationCode;
 
     /**
      * The list of scratch codes.
      */
-    private List<Integer> scratchCodes;
+    private final List<Integer> scratchCodes;
 
     /**
      * The constructor with package visibility.
