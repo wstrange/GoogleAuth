@@ -187,7 +187,28 @@ public final class GoogleAuthenticator {
         // Calculate scratch codes
         List<Integer> scratchCodes = calculateScratchCodes(buffer);
 
-        return new GoogleAuthenticatorKey(generatedKey, validationCode, scratchCodes);
+        return new GoogleAuthenticatorKey(
+                generatedKey,
+                validationCode,
+                scratchCodes);
+    }
+
+    public GoogleAuthenticatorKey generateSecretKey(String userName) {
+        // Further validation will be performed by the configured provider.
+        if (userName == null) {
+            throw new IllegalArgumentException("User name cannot be null.");
+        }
+
+        GoogleAuthenticatorKey key = generateSecretKey();
+
+        ICredentialRepository repository = getValidCredentialRepository();
+        repository.saveUserCredentials(
+                userName,
+                key.getKey(),
+                key.getVerificationCode(),
+                key.getScratchCodes());
+
+        return key;
     }
 
     private List<Integer> calculateScratchCodes(byte[] buffer) {
@@ -434,7 +455,7 @@ public final class GoogleAuthenticator {
 
         ICredentialRepository repository = getValidCredentialRepository();
 
-        return authorize(repository.getUserKey(userName), verificationCode);
+        return authorize(repository.getSecretKey(userName), verificationCode);
     }
 
     /**
@@ -461,7 +482,7 @@ public final class GoogleAuthenticator {
         ICredentialRepository repository = getValidCredentialRepository();
 
         return authorize(
-                repository.getUserKey(userName),
+                repository.getSecretKey(userName),
                 verificationCode,
                 window);
     }
