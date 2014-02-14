@@ -160,15 +160,19 @@ public final class GoogleAuthenticator {
     }
 
     /**
-     * Generate a random secret key. This must be saved by the server and
-     * associated with the users account to verify the code displayed by
-     * Google Authenticator.
+     * This method generates a new set of credentials including:
+     * <ol>
+     * <li>Secret key.</li>
+     * <li>Validation code.</li>
+     * <li>A list of scratch codes.</li>
+     * </ol>
+     * <p/>
      * <p/>
      * The user must register this secret on their device.
      *
      * @return secret key
      */
-    public GoogleAuthenticatorKey generateSecretKey() {
+    public GoogleAuthenticatorKey createCredentials() {
 
         // Allocating a buffer sufficiently large to hold the bytes required by
         // the secret key and the scratch codes.
@@ -193,13 +197,23 @@ public final class GoogleAuthenticator {
                 scratchCodes);
     }
 
-    public GoogleAuthenticatorKey generateSecretKey(String userName) {
+    /**
+     * This method generates a new set of credentials invoking the
+     * <code>#createCredentials</code> method with no arguments. The generated
+     * credentials are then saved using the configured
+     * <code>#ICredentialRepository</code> service.
+     * <p/>
+     * The user must register this secret on their device.
+     *
+     * @return secret key
+     */
+    public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
         if (userName == null) {
             throw new IllegalArgumentException("User name cannot be null.");
         }
 
-        GoogleAuthenticatorKey key = generateSecretKey();
+        GoogleAuthenticatorKey key = createCredentials();
 
         ICredentialRepository repository = getValidCredentialRepository();
         repository.saveUserCredentials(

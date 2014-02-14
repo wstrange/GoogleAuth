@@ -32,7 +32,7 @@ public class GoogleAuthTest {
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
 
         final GoogleAuthenticatorKey key =
-                googleAuthenticator.generateSecretKey();
+                googleAuthenticator.createCredentials();
         final String secret = key.getKey();
         final List<Integer> scratchCodes = key.getScratchCodes();
 
