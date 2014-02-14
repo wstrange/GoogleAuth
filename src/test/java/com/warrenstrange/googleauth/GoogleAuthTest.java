@@ -89,9 +89,9 @@ public class GoogleAuthTest {
         GoogleAuthenticator ga = new GoogleAuthenticator();
         ga.setWindowSize(5);  //should give 5 * 30 seconds of grace...
 
-        boolean r = ga.authorize(SECRET_KEY, VALIDATION_CODE);
+        boolean isCodeValid = ga.authorize(SECRET_KEY, VALIDATION_CODE);
 
-        System.out.println("Check VALIDATION_CODE = " + r);
+        System.out.println("Check VALIDATION_CODE = " + isCodeValid);
     }
 
     @Test
@@ -99,8 +99,8 @@ public class GoogleAuthTest {
         GoogleAuthenticator ga = new GoogleAuthenticator();
         ga.setWindowSize(5);  //should give 5 * 30 seconds of grace...
 
-        boolean r = ga.authorizeUser("testName", VALIDATION_CODE);
+        boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 
-        System.out.println("Check VALIDATION_CODE = " + r);
+        System.out.println("Check VALIDATION_CODE = " + isCodeValid);
     }
 }
