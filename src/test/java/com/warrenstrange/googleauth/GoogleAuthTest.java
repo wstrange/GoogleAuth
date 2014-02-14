@@ -3,6 +3,8 @@ package com.warrenstrange.googleauth;
 
 import org.junit.Test;
 
+import java.util.List;
+
 /**
  * Not really a unit test, but it shows the basic usage of this package.
  * To properly test the authenticator, manual intervention and multiple steps
@@ -32,12 +34,21 @@ public class GoogleAuthTest {
         final GoogleAuthenticatorKey key =
                 googleAuthenticator.generateSecretKey();
         final String secret = key.getKey();
+        final List<Integer> scratchCodes = key.getScratchCodes();
 
         String url = GoogleAuthenticatorKey.getQRBarcodeURL(
                 "testuser", "testhost", secret);
 
         System.out.println("Please register " + url);
         System.out.println("Secret key is " + secret);
+
+        for (Integer i : scratchCodes) {
+            if (!googleAuthenticator.validateScratchCode(i)) {
+                throw new IllegalArgumentException("An invalid code has been " +
+                        "generated: this is an application bug.");
+            }
+            System.out.println("Scratch code: " + i);
+        }
     }
 
     @Test

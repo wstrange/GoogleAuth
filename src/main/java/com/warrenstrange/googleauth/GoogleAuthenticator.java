@@ -7,10 +7,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -65,6 +62,11 @@ public final class GoogleAuthenticator {
      * Number of digits of a scratch code represented as a decimal integer.
      */
     private static final int SCRATCH_CODE_LENGTH = 8;
+
+    /**
+     * Magic number representing an invalid scratch code.
+     */
+    private static final int SCRATCH_CODE_INVALID = -1;
 
     /**
      * Length in bytes of each scratch code. We're using Google's default of
@@ -192,27 +194,96 @@ public final class GoogleAuthenticator {
         List<Integer> scratchCodes = new ArrayList<Integer>();
 
         while (scratchCodes.size() < SCRATCH_CODES) {
-            int scratchCode = 0;
+            byte[] scratchCodeBuffer = Arrays.copyOfRange(
+                    buffer,
+                    SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size(),
+                    SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size() + BYTES_PER_SCRATCH_CODE);
 
-            for (int i = 0; i < BYTES_PER_SCRATCH_CODE; ++i) {
-                scratchCode <<= 8;
-                scratchCode += buffer[SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size() + i];
-            }
+            int scratchCode = calculateScratchCode(scratchCodeBuffer);
 
-            scratchCode = (scratchCode & 0x7FFFFFFF) % SCRATCH_CODE_MODULUS;
-
-            if (scratchCode >= SCRATCH_CODE_MODULUS / 10) {
+            if (scratchCode != SCRATCH_CODE_INVALID) {
                 scratchCodes.add(scratchCode);
+            } else {
+                scratchCodes.add(generateScratchCode());
             }
         }
 
         return scratchCodes;
     }
 
+    /**
+     * This method calculates a scratch code from a random byte buffer of
+     * suitable size <code>#BYTES_PER_SCRATCH_CODE</code>.
+     *
+     * @param scratchCodeBuffer a random byte buffer whose minimum size is
+     *                          <code>#BYTES_PER_SCRATCH_CODE</code>.
+     * @return the scratch code.
+     */
+    private int calculateScratchCode(byte[] scratchCodeBuffer) {
+        if (scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE) {
+            throw new IllegalArgumentException("The provided random byte buffer " +
+                    "is too small.");
+        }
+
+        int scratchCode = 0;
+
+        for (int i = 0; i < BYTES_PER_SCRATCH_CODE; ++i) {
+            scratchCode <<= 8;
+            scratchCode += scratchCodeBuffer[i];
+        }
+
+        scratchCode = (scratchCode & 0x7FFFFFFF) % SCRATCH_CODE_MODULUS;
+
+        // Accept the scratch code only if it has exactly
+        // SCRATCH_CODE_LENGTH digits.
+        if (validateScratchCode(scratchCode)) {
+            return scratchCode;
+        } else {
+            return SCRATCH_CODE_INVALID;
+        }
+    }
+
+    /* package */ boolean validateScratchCode(int scratchCode) {
+        return (scratchCode >= SCRATCH_CODE_MODULUS / 10);
+    }
+
+    /**
+     * This method creates a new random byte buffer from which a new scratch
+     * code is generated. This function is invoked if a scratch code generated
+     * from the main buffer is invalid because it does not satisfy the scratch
+     * code restrictions.
+     *
+     * @return A valid scratch code.
+     */
+    private int generateScratchCode() {
+        while (true) {
+            byte[] scratchCodeBuffer = new byte[BYTES_PER_SCRATCH_CODE];
+            secureRandom.nextBytes(scratchCodeBuffer);
+
+            int scratchCode = calculateScratchCode(scratchCodeBuffer);
+
+            if (scratchCode != SCRATCH_CODE_INVALID) {
+                return scratchCode;
+            }
+        }
+    }
+
+    /**
+     * This method calculates the validation code at time 0.
+     *
+     * @param secretKey The secret key to use.
+     * @return the validation code at time 0.
+     */
     private int calculateValidationCode(byte[] secretKey) {
         return calculateCode(secretKey, 0);
     }
 
+    /**
+     * This method calculates the secret key given a random byte buffer.
+     *
+     * @param secretKey a random byte buffer.
+     * @return the secret key.
+     */
     private String calculateSecretKey(byte[] secretKey) {
         Base32 codec = new Base32();
         byte[] encodedKey = codec.encode(secretKey);
@@ -346,6 +417,95 @@ public final class GoogleAuthenticator {
     }
 
     /**
+     * This method validates a verification code of the specified user whose
+     * private key is retrieved from the configured credential repository. This
+     * method delegates the validation to the <code>#authorize</code> method.
+     *
+     * @param userName         The user whose verification code is to be
+     *                         validated.
+     * @param verificationCode The validation code.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws GoogleAuthenticatorException
+     * @see #authorize(String, int)
+     */
+    public boolean authorizeUser(String userName, int verificationCode)
+            throws GoogleAuthenticatorException {
+
+        ICredentialRepository repository = getValidCredentialRepository();
+
+        return authorize(repository.getUserKey(userName), verificationCode);
+    }
+
+    /**
+     * This method validates a verification code of the specified user whose
+     * private key is retrieved from the configured credential repository. This
+     * method delegates the validation to the <code>#authorize</code> method.
+     *
+     * @param userName         The user whose verification code is to be
+     *                         validated.
+     * @param verificationCode The validation code.
+     * @param window           the window size to use during the validation
+     *                         process.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws GoogleAuthenticatorException
+     * @see GoogleAuthenticator#MAX_WINDOW
+     * @see #authorize(String, int, int)
+     */
+    public boolean authorizeUser(
+            String userName,
+            int verificationCode,
+            int window)
+            throws GoogleAuthenticatorException {
+        ICredentialRepository repository = getValidCredentialRepository();
+
+        return authorize(
+                repository.getUserKey(userName),
+                verificationCode,
+                window);
+    }
+
+    /**
+     * This method loads the first available and valid ICredentialRepository
+     * registered using the Java service loader API.
+     *
+     * @return the first registered ICredentialRepository.
+     * @throws java.lang.UnsupportedOperationException if no valid service is
+     *                                                 found.
+     */
+    private ICredentialRepository getValidCredentialRepository() {
+        ICredentialRepository repository = getCredentialRepository();
+
+        if (repository == null) {
+            throw new UnsupportedOperationException(
+                    String.format("An instance of the %s service must be " +
+                            "configured in order to use this feature.",
+                            ICredentialRepository.class.getName()));
+        }
+
+        return repository;
+    }
+
+    /**
+     * This method loads the first available ICredentialRepository
+     * registered using the Java service loader API.
+     *
+     * @return the first registered ICredentialRepository or <code>null</code>
+     * if none is found.
+     */
+    private ICredentialRepository getCredentialRepository() {
+        ServiceLoader<ICredentialRepository> loader =
+                ServiceLoader.load(ICredentialRepository.class);
+
+        for (ICredentialRepository repository : loader) {
+            return repository;
+        }
+
+        return null;
+    }
+
+    /**
      * Checks a verification code against a secret key using the current time.
      * The algorithm also checks in a time window whose size is fixed to a value
      * of [-(window - 1)/2, +(window - 1)/2] time intervals. The maximum size of
@@ -356,7 +516,8 @@ public final class GoogleAuthenticator {
      *
      * @param secret           the Base32 encoded secret key.
      * @param verificationCode the verification code.
-     * @param window           the window size to use during the validation process.
+     * @param window           the window size to use during the validation
+     *                         process.
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
      * @throws GoogleAuthenticatorException if a failure occurs during the
@@ -366,7 +527,7 @@ public final class GoogleAuthenticator {
      *                                      functions provided by the JCE.
      * @see GoogleAuthenticator#MAX_WINDOW
      */
-    public static boolean authorize(
+    public boolean authorize(
             String secret,
             int verificationCode,
             int window)
