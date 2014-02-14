@@ -84,6 +84,7 @@ public final class GoogleAuthenticator {
      *
      * @see java.security.SecureRandom#getInstance(String)
      */
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
 
     /**
@@ -488,6 +489,7 @@ public final class GoogleAuthenticator {
      * @see GoogleAuthenticator#MAX_WINDOW
      * @see #authorize(String, int, int)
      */
+    @SuppressWarnings("UnusedDeclaration")
     public boolean authorizeUser(
             String userName,
             int verificationCode,
@@ -533,6 +535,7 @@ public final class GoogleAuthenticator {
         ServiceLoader<ICredentialRepository> loader =
                 ServiceLoader.load(ICredentialRepository.class);
 
+        //noinspection LoopStatementThatDoesntLoop
         for (ICredentialRepository repository : loader) {
             return repository;
         }
