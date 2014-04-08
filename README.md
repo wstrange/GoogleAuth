@@ -33,7 +33,9 @@ of credentials can be used:
 If an attempt is made to use such methods when no credential repository is
 configured, a meaningful error is emitted:
 
-    java.lang.UnsupportedOperationException: An instance of the com.warrenstrange.googleauth.ICredentialRepository service must be configured in order to use this feature.
+    java.lang.UnsupportedOperationException: An instance of the
+    com.warrenstrange.googleauth.ICredentialRepository service must be
+    configured in order to use this feature.
 
 ### Registering a Credential Repository
 
