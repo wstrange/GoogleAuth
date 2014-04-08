@@ -6,8 +6,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -76,11 +74,6 @@ public final class GoogleAuthenticator {
     private static final int BYTES_PER_SCRATCH_CODE = 4;
 
     /**
-     * The size of the seed which is fed to the SecureRandom instance, in bytes.
-     */
-    private static final int SEED_SIZE = 128;
-
-    /**
      * The SecureRandom algorithm to use.
      *
      * @see java.security.SecureRandom#getInstance(String)
@@ -114,7 +107,7 @@ public final class GoogleAuthenticator {
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private SecureRandom secureRandom;
+    private ReseedingSecureRandom secureRandom;
 
     /**
      * Cryptographic hash function used to calculate the HMAC (Hash-based
@@ -140,28 +133,10 @@ public final class GoogleAuthenticator {
             TimeUnit.SECONDS.toMillis(30);
 
     public GoogleAuthenticator() {
+        secureRandom = new ReseedingSecureRandom(
+                RANDOM_NUMBER_ALGORITHM,
+                RANDOM_NUMBER_ALGORITHM_PROVIDER);
 
-        try {
-            secureRandom = SecureRandom.getInstance(
-                    RANDOM_NUMBER_ALGORITHM,
-                    RANDOM_NUMBER_ALGORITHM_PROVIDER);
-        } catch (NoSuchAlgorithmException e) {
-            throw new GoogleAuthenticatorException(
-                    String.format(
-                            "Could not initialise SecureRandom " +
-                                    "with the specified algorithm: %s",
-                            RANDOM_NUMBER_ALGORITHM
-                    ), e
-            );
-        } catch (NoSuchProviderException e) {
-            throw new GoogleAuthenticatorException(
-                    String.format(
-                            "Could not initialise SecureRandom " +
-                                    "with the specified provider: %s",
-                            RANDOM_NUMBER_ALGORITHM_PROVIDER
-                    ), e
-            );
-        }
     }
 
     /**
@@ -231,7 +206,7 @@ public final class GoogleAuthenticator {
     }
 
     private List<Integer> calculateScratchCodes(byte[] buffer) {
-        List<Integer> scratchCodes = new ArrayList<Integer>();
+        List<Integer> scratchCodes = new ArrayList<>();
 
         while (scratchCodes.size() < SCRATCH_CODES) {
             byte[] scratchCodeBuffer = Arrays.copyOfRange(
@@ -388,15 +363,8 @@ public final class GoogleAuthenticator {
 
             // Returning the validation code to the caller.
             return (int) truncatedHash;
-        } catch (NoSuchAlgorithmException ex) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
             // Logging the exception.
-            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-
-            // We're not disclosing internal error details to our clients.
-            throw new GoogleAuthenticatorException("The operation cannot be "
-                    + "performed now.");
-        } catch (InvalidKeyException ex) {
-            // Logging the exception
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
 
             // We're not disclosing internal error details to our clients.
