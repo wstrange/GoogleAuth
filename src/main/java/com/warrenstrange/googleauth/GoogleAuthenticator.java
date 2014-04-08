@@ -6,6 +6,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +87,7 @@ public final class GoogleAuthenticator {
      */
     @SuppressWarnings("SpellCheckingInspection")
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
+    private static final String RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
     /**
      * Minimum validation window size.
@@ -140,24 +142,26 @@ public final class GoogleAuthenticator {
     public GoogleAuthenticator() {
 
         try {
-            secureRandom = SecureRandom.getInstance(RANDOM_NUMBER_ALGORITHM);
+            secureRandom = SecureRandom.getInstance(
+                    RANDOM_NUMBER_ALGORITHM,
+                    RANDOM_NUMBER_ALGORITHM_PROVIDER);
         } catch (NoSuchAlgorithmException e) {
             throw new GoogleAuthenticatorException(
                     String.format(
                             "Could not initialise SecureRandom " +
                                     "with the specified algorithm: %s",
-                            RANDOM_NUMBER_ALGORITHM), e);
+                            RANDOM_NUMBER_ALGORITHM
+                    ), e
+            );
+        } catch (NoSuchProviderException e) {
+            throw new GoogleAuthenticatorException(
+                    String.format(
+                            "Could not initialise SecureRandom " +
+                                    "with the specified provider: %s",
+                            RANDOM_NUMBER_ALGORITHM_PROVIDER
+                    ), e
+            );
         }
-
-        reSeed();
-    }
-
-    /**
-     * Reseed the internal random number generator in order to improve its long
-     * term security.
-     */
-    public void reSeed() {
-        secureRandom.setSeed(secureRandom.generateSeed(SEED_SIZE));
     }
 
     /**
@@ -517,8 +521,10 @@ public final class GoogleAuthenticator {
         if (repository == null) {
             throw new UnsupportedOperationException(
                     String.format("An instance of the %s service must be " +
-                            "configured in order to use this feature.",
-                            ICredentialRepository.class.getName()));
+                                    "configured in order to use this feature.",
+                            ICredentialRepository.class.getName()
+                    )
+            );
         }
 
         return repository;
