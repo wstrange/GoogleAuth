@@ -36,7 +36,7 @@ import java.util.logging.Logger;
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
  * @since 1.0
  */
-public final class GoogleAuthenticator {
+public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
      * The logger for this class.
@@ -139,19 +139,7 @@ public final class GoogleAuthenticator {
 
     }
 
-    /**
-     * This method generates a new set of credentials including:
-     * <ol>
-     * <li>Secret key.</li>
-     * <li>Validation code.</li>
-     * <li>A list of scratch codes.</li>
-     * </ol>
-     * <p/>
-     * <p/>
-     * The user must register this secret on their device.
-     *
-     * @return secret key
-     */
+    @Override
     public GoogleAuthenticatorKey createCredentials() {
 
         // Allocating a buffer sufficiently large to hold the bytes required by
@@ -177,16 +165,7 @@ public final class GoogleAuthenticator {
                 scratchCodes);
     }
 
-    /**
-     * This method generates a new set of credentials invoking the
-     * <code>#createCredentials</code> method with no arguments. The generated
-     * credentials are then saved using the configured
-     * <code>#ICredentialRepository</code> service.
-     * <p/>
-     * The user must register this secret on their device.
-     *
-     * @return secret key
-     */
+    @Override
     public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
         if (userName == null) {
@@ -373,15 +352,7 @@ public final class GoogleAuthenticator {
         }
     }
 
-    /**
-     * Set the default window size used by this instance when an explicit value
-     * is not specified. This is an integer value representing the number of 30
-     * second windows we check during the validation process, to account for
-     * differences between the server and the client clocks.
-     * The bigger the window, the more tolerant we are about clock skews.
-     *
-     * @param s window size - must be >=1 and <=17.  Other values are ignored
-     */
+    @Override
     public void setWindowSize(int s) {
         if (s >= MIN_WINDOW && s <= MAX_WINDOW) {
             windowSize = new AtomicInteger(s);
@@ -391,52 +362,18 @@ public final class GoogleAuthenticator {
         }
     }
 
-    /**
-     * Get the default window size used by this instance when an explicit value
-     * is not specified.
-     *
-     * @return the current window size.
-     */
+    @Override
     public int getWindowSize() {
         return windowSize.get();
     }
 
-    /**
-     * Checks a verification code against a secret key using the current time.
-     * The algorithm also checks in a time window whose size determined by the
-     * <code>windowSize</code> property of this class.
-     * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
-     *
-     * @param secret           the Base32 encoded secret key.
-     * @param verificationCode the verification code.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if a failure occurs during the
-     *                                      calculation of the validation code.
-     *                                      The only failures that should occur
-     *                                      are related with the cryptographic
-     *                                      functions provided by the JCE.
-     * @see #getWindowSize()
-     */
+    @Override
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
         return authorize(secret, verificationCode, this.windowSize.get());
     }
 
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository. This
-     * method delegates the validation to the <code>#authorize</code> method.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException
-     * @see #authorize(String, int)
-     */
+    @Override
     public boolean authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException {
 
@@ -445,22 +382,7 @@ public final class GoogleAuthenticator {
         return authorize(repository.getSecretKey(userName), verificationCode);
     }
 
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository. This
-     * method delegates the validation to the <code>#authorize</code> method.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @param window           the window size to use during the validation
-     *                         process.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException
-     * @see GoogleAuthenticator#MAX_WINDOW
-     * @see #authorize(String, int, int)
-     */
+    @Override
     @SuppressWarnings("UnusedDeclaration")
     public boolean authorizeUser(
             String userName,
@@ -517,28 +439,7 @@ public final class GoogleAuthenticator {
         return null;
     }
 
-    /**
-     * Checks a verification code against a secret key using the current time.
-     * The algorithm also checks in a time window whose size is fixed to a value
-     * of [-(window - 1)/2, +(window - 1)/2] time intervals. The maximum size of
-     * the window is specified by the <code>MAX_WINDOW</code> constant and
-     * cannot be overridden.
-     * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
-     *
-     * @param secret           the Base32 encoded secret key.
-     * @param verificationCode the verification code.
-     * @param window           the window size to use during the validation
-     *                         process.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if a failure occurs during the
-     *                                      calculation of the validation code.
-     *                                      The only failures that should occur
-     *                                      are related with the cryptographic
-     *                                      functions provided by the JCE.
-     * @see GoogleAuthenticator#MAX_WINDOW
-     */
+    @Override
     public boolean authorize(
             String secret,
             int verificationCode,
