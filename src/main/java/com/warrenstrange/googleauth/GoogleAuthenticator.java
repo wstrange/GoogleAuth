@@ -1,10 +1,38 @@
+/*
+ * Copyright (c) 2014, Enrico Maria Crisostomo
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *
+ *   * Redistributions in binary form must reproduce the above copyright notice,
+ *     this list of conditions and the following disclaimer in the documentation
+ *     and/or other materials provided with the distribution.
+ *
+ *   * Neither the name of the author nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package com.warrenstrange.googleauth;
 
 import org.apache.commons.codec.binary.Base32;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -40,40 +68,55 @@ import java.util.logging.Logger;
 public final class GoogleAuthenticator {
 
     /**
+     * Minimum validation window size.
+     */
+    public static final int MIN_WINDOW = 1;
+    /**
+     * Maximum validation window size.
+     */
+    public static final int MAX_WINDOW = 17;
+    /**
+     * Modulus used to truncate the secret key.
+     */
+    public static final int SECRET_KEY_MODULE = 1000 * 1000;
+    /**
+     * The number of seconds a key is valid.
+     */
+    public static final long KEY_VALIDATION_INTERVAL_MS =
+            TimeUnit.SECONDS.toMillis(30);
+    /**
      * The logger for this class.
      */
     private static final Logger LOGGER =
             Logger.getLogger(GoogleAuthenticator.class.getName());
-
     /**
      * The number of bits of a secret key in binary form. Since the Base32
      * encoding with 8 bit characters introduces an 160% overhead, we just need
      * 80 bits (10 bytes) to generate a 16 bytes Base32-encoded secret key.
      */
     private static final int SECRET_BITS = 80;
-
     /**
      * Number of scratch codes to generate during the key generation.
      * We are using Google's default of providing 5 scratch codes.
      */
     private static final int SCRATCH_CODES = 5;
-
     /**
      * Number of digits of a scratch code represented as a decimal integer.
      */
     private static final int SCRATCH_CODE_LENGTH = 8;
-
+    /**
+     * Modulus used to truncate the scratch code.
+     */
+    public static final int SCRATCH_CODE_MODULUS = (int) Math.pow(10, SCRATCH_CODE_LENGTH);
     /**
      * Magic number representing an invalid scratch code.
      */
     private static final int SCRATCH_CODE_INVALID = -1;
-
     /**
      * Length in bytes of each scratch code. We're using Google's default of
      * using 4 bytes per scratch code.
      */
     private static final int BYTES_PER_SCRATCH_CODE = 4;
-
     /**
      * The SecureRandom algorithm to use.
      *
@@ -82,24 +125,18 @@ public final class GoogleAuthenticator {
     @SuppressWarnings("SpellCheckingInspection")
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
     private static final String RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
-
     /**
-     * Minimum validation window size.
+     * Cryptographic hash function used to calculate the HMAC (Hash-based
+     * Message Authentication Code). This implementation uses the SHA1 hash
+     * function.
      */
-    public static final int MIN_WINDOW = 1;
-
-    /**
-     * Maximum validation window size.
-     */
-    public static final int MAX_WINDOW = 17;
-
+    private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
     /**
      * The initial windowSize used when validating the codes. We are using
      * Google's default behaviour of using a window size equal to 3. The maximum
      * window size is 17.
      */
     private AtomicInteger windowSize = new AtomicInteger(3);
-
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
      * Random instances are required to be thread-safe, no synchronisation is
@@ -110,34 +147,121 @@ public final class GoogleAuthenticator {
      */
     private ReseedingSecureRandom secureRandom;
 
-    /**
-     * Cryptographic hash function used to calculate the HMAC (Hash-based
-     * Message Authentication Code). This implementation uses the SHA1 hash
-     * function.
-     */
-    public static final String HMAC_HASH_FUNCTION = "HmacSHA1";
-
-    /**
-     * Modulus used to truncate the secret key.
-     */
-    public static final int SECRET_KEY_MODULE = 1000 * 1000;
-
-    /**
-     * Modulus used to truncate the scratch code.
-     */
-    public static final int SCRATCH_CODE_MODULUS = (int) Math.pow(10, SCRATCH_CODE_LENGTH);
-
-    /**
-     * The number of seconds a key is valid.
-     */
-    public static final long KEY_VALIDATION_INTERVAL_MS =
-            TimeUnit.SECONDS.toMillis(30);
-
     public GoogleAuthenticator() {
         secureRandom = new ReseedingSecureRandom(
                 RANDOM_NUMBER_ALGORITHM,
                 RANDOM_NUMBER_ALGORITHM_PROVIDER);
 
+    }
+
+    /**
+     * Calculates the verification code of the provided key at the specified
+     * instant of time using the algorithm specified in RFC 6238.
+     *
+     * @param key the secret key in binary format.
+     * @param tm  the instant of time.
+     * @return the validation code for the provided key at the specified instant
+     * of time.
+     */
+    private static int calculateCode(byte[] key, long tm) {
+        // Allocating an array of bytes to represent the specified instant
+        // of time.
+        byte[] data = new byte[8];
+        long value = tm;
+
+        // Converting the instant of time from the long representation to a
+        // big-endian array of bytes (RFC4226, 5.2. Description).
+        for (int i = 8; i-- > 0; value >>>= 8) {
+            data[i] = (byte) value;
+        }
+
+        // Building the secret key specification for the HmacSHA1 algorithm.
+        SecretKeySpec signKey = new SecretKeySpec(key, HMAC_HASH_FUNCTION);
+
+        try {
+            // Getting an HmacSHA1 algorithm implementation from the JCE.
+            Mac mac = Mac.getInstance(HMAC_HASH_FUNCTION);
+
+            // Initializing the MAC algorithm.
+            mac.init(signKey);
+
+            // Processing the instant of time and getting the encrypted data.
+            byte[] hash = mac.doFinal(data);
+
+            // Building the validation code performing dynamic truncation
+            // (RFC4226, 5.3. Generating an HOTP value)
+            int offset = hash[hash.length - 1] & 0xF;
+
+            // We are using a long because Java hasn't got an unsigned integer type
+            // and we need 32 unsigned bits).
+            long truncatedHash = 0;
+
+            for (int i = 0; i < 4; ++i) {
+                truncatedHash <<= 8;
+
+                // Java bytes are signed but we need an unsigned integer:
+                // cleaning off all but the LSB.
+                truncatedHash |= (hash[offset + i] & 0xFF);
+            }
+
+            // Cleaning bits higher than the 32nd and calculating the module with the
+            // maximum validation code value.
+            truncatedHash &= 0x7FFFFFFF;
+            truncatedHash %= SECRET_KEY_MODULE;
+
+            // Returning the validation code to the caller.
+            return (int) truncatedHash;
+        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
+            // Logging the exception.
+            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
+
+            // We're not disclosing internal error details to our clients.
+            throw new GoogleAuthenticatorException("The operation cannot be "
+                    + "performed now.");
+        }
+    }
+
+    /**
+     * This method implements the algorithm specified in RFC 6238 to check if a
+     * validation code is valid in a given instant of time for the given secret
+     * key.
+     *
+     * @param secret the Base32 encoded secret key.
+     * @param code   the code to validate.
+     * @param tm     the instant of time to use during the validation process.
+     * @param window the window size to use during the validation process.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     */
+    private static boolean checkCode(
+            String secret,
+            long code,
+            long tm,
+            int window) {
+        // Decoding the secret key to get its raw byte representation.
+        Base32 codec = new Base32();
+        byte[] decodedKey = codec.decode(secret);
+
+        // convert unix time into a 30 second "window" as specified by the
+        // TOTP specification. Using Google's default interval of 30 seconds.
+        final long timeWindow = tm / KEY_VALIDATION_INTERVAL_MS;
+
+        // Calculating the verification code of the given key in each of the
+        // time intervals and returning true if the provided code is equal to
+        // one of them.
+        for (int i = -((window - 1) / 2); i <= window / 2; ++i) {
+            // Calculating the verification code for the current time interval.
+            long hash = calculateCode(decodedKey, timeWindow + i);
+
+            // Checking if the provided code is equal to the calculated one.
+            if (hash == code) {
+                // The verification code is valid.
+                return true;
+            }
+        }
+
+        // The verification code is invalid.
+        return false;
     }
 
     /**
@@ -309,70 +433,13 @@ public final class GoogleAuthenticator {
     }
 
     /**
-     * Calculates the verification code of the provided key at the specified
-     * instant of time using the algorithm specified in RFC 6238.
+     * Get the default window size used by this instance when an explicit value
+     * is not specified.
      *
-     * @param key the secret key in binary format.
-     * @param tm  the instant of time.
-     * @return the validation code for the provided key at the specified instant
-     * of time.
+     * @return the current window size.
      */
-    private static int calculateCode(byte[] key, long tm) {
-        // Allocating an array of bytes to represent the specified instant
-        // of time.
-        byte[] data = new byte[8];
-        long value = tm;
-
-        // Converting the instant of time from the long representation to a
-        // big-endian array of bytes (RFC4226, 5.2. Description).
-        for (int i = 8; i-- > 0; value >>>= 8) {
-            data[i] = (byte) value;
-        }
-
-        // Building the secret key specification for the HmacSHA1 algorithm.
-        SecretKeySpec signKey = new SecretKeySpec(key, HMAC_HASH_FUNCTION);
-
-        try {
-            // Getting an HmacSHA1 algorithm implementation from the JCE.
-            Mac mac = Mac.getInstance(HMAC_HASH_FUNCTION);
-
-            // Initializing the MAC algorithm.
-            mac.init(signKey);
-
-            // Processing the instant of time and getting the encrypted data.
-            byte[] hash = mac.doFinal(data);
-
-            // Building the validation code performing dynamic truncation
-            // (RFC4226, 5.3. Generating an HOTP value)
-            int offset = hash[hash.length - 1] & 0xF;
-
-            // We are using a long because Java hasn't got an unsigned integer type
-            // and we need 32 unsigned bits).
-            long truncatedHash = 0;
-
-            for (int i = 0; i < 4; ++i) {
-                truncatedHash <<= 8;
-
-                // Java bytes are signed but we need an unsigned integer:
-                // cleaning off all but the LSB.
-                truncatedHash |= (hash[offset + i] & 0xFF);
-            }
-
-            // Cleaning bits higher than the 32nd and calculating the module with the
-            // maximum validation code value.
-            truncatedHash &= 0x7FFFFFFF;
-            truncatedHash %= SECRET_KEY_MODULE;
-
-            // Returning the validation code to the caller.
-            return (int) truncatedHash;
-        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
-            // Logging the exception.
-            LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
-
-            // We're not disclosing internal error details to our clients.
-            throw new GoogleAuthenticatorException("The operation cannot be "
-                    + "performed now.");
-        }
+    public int getWindowSize() {
+        return windowSize.get();
     }
 
     /**
@@ -391,16 +458,6 @@ public final class GoogleAuthenticator {
             throw new GoogleAuthenticatorException(
                     String.format("Invalid window size: %d", s));
         }
-    }
-
-    /**
-     * Get the default window size used by this instance when an explicit value
-     * is not specified.
-     *
-     * @return the current window size.
-     */
-    public int getWindowSize() {
-        return windowSize.get();
     }
 
     /**
@@ -567,48 +624,5 @@ public final class GoogleAuthenticator {
                 verificationCode,
                 new Date().getTime(),
                 window);
-    }
-
-    /**
-     * This method implements the algorithm specified in RFC 6238 to check if a
-     * validation code is valid in a given instant of time for the given secret
-     * key.
-     *
-     * @param secret the Base32 encoded secret key.
-     * @param code   the code to validate.
-     * @param tm     the instant of time to use during the validation process.
-     * @param window the window size to use during the validation process.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     */
-    private static boolean checkCode(
-            String secret,
-            long code,
-            long tm,
-            int window) {
-        // Decoding the secret key to get its raw byte representation.
-        Base32 codec = new Base32();
-        byte[] decodedKey = codec.decode(secret);
-
-        // convert unix time into a 30 second "window" as specified by the
-        // TOTP specification. Using Google's default interval of 30 seconds.
-        final long timeWindow = tm / KEY_VALIDATION_INTERVAL_MS;
-
-        // Calculating the verification code of the given key in each of the
-        // time intervals and returning true if the provided code is equal to
-        // one of them.
-        for (int i = -((window - 1) / 2); i <= window / 2; ++i) {
-            // Calculating the verification code for the current time interval.
-            long hash = calculateCode(decodedKey, timeWindow + i);
-
-            // Checking if the provided code is equal to the calculated one.
-            if (hash == code) {
-                // The verification code is valid.
-                return true;
-            }
-        }
-
-        // The verification code is invalid.
-        return false;
     }
 }
