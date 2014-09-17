@@ -74,9 +74,9 @@ public class GoogleAuthTest {
         final String secret = key.getKey();
         final List<Integer> scratchCodes = key.getScratchCodes();
 
-        String otpAuthURL = GoogleAuthenticatorKey.getOtpAuthURL("Test Org.", "test@prova.org", secret);
+        String otpAuthURL = GoogleAuthenticatorQRGenerator.getOtpAuthURL("Test Org.", "test@prova.org", key);
 
-        System.out.println("Please register (otpauth uri)" + otpAuthURL);
+        System.out.println("Please register (otpauth uri): " + otpAuthURL);
         System.out.println("Secret key is " + secret);
 
         for (Integer i : scratchCodes) {
@@ -97,9 +97,9 @@ public class GoogleAuthTest {
         final String secret = key.getKey();
         final List<Integer> scratchCodes = key.getScratchCodes();
 
-        String otpAuthURL = GoogleAuthenticatorKey.getOtpAuthURL("Test Org.", "test@prova.org", secret);
+        String otpAuthURL = GoogleAuthenticatorQRGenerator.getOtpAuthURL("Test Org.", "test@prova.org", key);
 
-        System.out.println("Please register " + otpAuthURL);
+        System.out.println("Please register (otpauth uri): " + otpAuthURL);
         System.out.println("Secret key is " + secret);
 
         for (Integer i : scratchCodes) {
