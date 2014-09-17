@@ -23,7 +23,7 @@ public final class GoogleAuthenticatorKey {
      * The format string to generate the URL of a Google-provided QR bar code.
      */
     private static final String QR_FORMAT =
-            "https://www.google.com/chart?chs=200x200&chld=M%%7C0&cht=qr&"
+            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&"
                     + "chl=otpauth://totp/%s@%s%%3Fsecret%%3D%s";
 
     /**
