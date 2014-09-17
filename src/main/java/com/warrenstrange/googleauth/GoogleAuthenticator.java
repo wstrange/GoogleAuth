@@ -27,6 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package com.warrenstrange.googleauth;
 
 import org.apache.commons.codec.binary.Base32;
@@ -65,20 +66,23 @@ import java.util.logging.Logger;
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
  * @since 1.0
  */
-public final class GoogleAuthenticator {
+public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
      * Minimum validation window size.
      */
     public static final int MIN_WINDOW = 1;
+
     /**
      * Maximum validation window size.
      */
     public static final int MAX_WINDOW = 17;
+
     /**
      * Modulus used to truncate the secret key.
      */
     public static final int SECRET_KEY_MODULE = 1000 * 1000;
+
     /**
      * The number of seconds a key is valid.
      */
@@ -89,54 +93,69 @@ public final class GoogleAuthenticator {
      */
     private static final Logger LOGGER =
             Logger.getLogger(GoogleAuthenticator.class.getName());
+
     /**
      * The number of bits of a secret key in binary form. Since the Base32
      * encoding with 8 bit characters introduces an 160% overhead, we just need
      * 80 bits (10 bytes) to generate a 16 bytes Base32-encoded secret key.
      */
     private static final int SECRET_BITS = 80;
+
     /**
      * Number of scratch codes to generate during the key generation.
      * We are using Google's default of providing 5 scratch codes.
      */
     private static final int SCRATCH_CODES = 5;
+
     /**
      * Number of digits of a scratch code represented as a decimal integer.
      */
     private static final int SCRATCH_CODE_LENGTH = 8;
+
     /**
      * Modulus used to truncate the scratch code.
      */
     public static final int SCRATCH_CODE_MODULUS = (int) Math.pow(10, SCRATCH_CODE_LENGTH);
+
     /**
      * Magic number representing an invalid scratch code.
      */
     private static final int SCRATCH_CODE_INVALID = -1;
+
     /**
      * Length in bytes of each scratch code. We're using Google's default of
      * using 4 bytes per scratch code.
      */
     private static final int BYTES_PER_SCRATCH_CODE = 4;
+
     /**
      * The SecureRandom algorithm to use.
      *
      * @see java.security.SecureRandom#getInstance(String)
      */
     @SuppressWarnings("SpellCheckingInspection")
+
     private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
+
+    /**
+     * Sun random number algorithm provider name.
+     */
     private static final String RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
+
     /**
      * Cryptographic hash function used to calculate the HMAC (Hash-based
      * Message Authentication Code). This implementation uses the SHA1 hash
      * function.
      */
     private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
+
     /**
      * The initial windowSize used when validating the codes. We are using
      * Google's default behaviour of using a window size equal to 3. The maximum
      * window size is 17.
      */
     private AtomicInteger windowSize = new AtomicInteger(3);
+
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
      * Random instances are required to be thread-safe, no synchronisation is
@@ -264,19 +283,7 @@ public final class GoogleAuthenticator {
         return false;
     }
 
-    /**
-     * This method generates a new set of credentials including:
-     * <ol>
-     * <li>Secret key.</li>
-     * <li>Validation code.</li>
-     * <li>A list of scratch codes.</li>
-     * </ol>
-     * <p/>
-     * <p/>
-     * The user must register this secret on their device.
-     *
-     * @return secret key
-     */
+    @Override
     public GoogleAuthenticatorKey createCredentials() {
 
         // Allocating a buffer sufficiently large to hold the bytes required by
@@ -302,16 +309,7 @@ public final class GoogleAuthenticator {
                 scratchCodes);
     }
 
-    /**
-     * This method generates a new set of credentials invoking the
-     * <code>#createCredentials</code> method with no arguments. The generated
-     * credentials are then saved using the configured
-     * <code>#ICredentialRepository</code> service.
-     * <p/>
-     * The user must register this secret on their device.
-     *
-     * @return secret key
-     */
+    @Override
     public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
         if (userName == null) {
@@ -432,25 +430,12 @@ public final class GoogleAuthenticator {
         return new String(encodedKey);
     }
 
-    /**
-     * Get the default window size used by this instance when an explicit value
-     * is not specified.
-     *
-     * @return the current window size.
-     */
+    @Override
     public int getWindowSize() {
         return windowSize.get();
     }
 
-    /**
-     * Set the default window size used by this instance when an explicit value
-     * is not specified. This is an integer value representing the number of 30
-     * second windows we check during the validation process, to account for
-     * differences between the server and the client clocks.
-     * The bigger the window, the more tolerant we are about clock skews.
-     *
-     * @param s window size - must be >=1 and <=17.  Other values are ignored
-     */
+    @Override
     public void setWindowSize(int s) {
         if (s >= MIN_WINDOW && s <= MAX_WINDOW) {
             windowSize = new AtomicInteger(s);
@@ -460,42 +445,13 @@ public final class GoogleAuthenticator {
         }
     }
 
-    /**
-     * Checks a verification code against a secret key using the current time.
-     * The algorithm also checks in a time window whose size determined by the
-     * <code>windowSize</code> property of this class.
-     * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
-     *
-     * @param secret           the Base32 encoded secret key.
-     * @param verificationCode the verification code.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if a failure occurs during the
-     *                                      calculation of the validation code.
-     *                                      The only failures that should occur
-     *                                      are related with the cryptographic
-     *                                      functions provided by the JCE.
-     * @see #getWindowSize()
-     */
+    @Override
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
         return authorize(secret, verificationCode, this.windowSize.get());
     }
 
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository. This
-     * method delegates the validation to the <code>#authorize</code> method.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException
-     * @see #authorize(String, int)
-     */
+    @Override
     public boolean authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException {
 
@@ -504,22 +460,7 @@ public final class GoogleAuthenticator {
         return authorize(repository.getSecretKey(userName), verificationCode);
     }
 
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository. This
-     * method delegates the validation to the <code>#authorize</code> method.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @param window           the window size to use during the validation
-     *                         process.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException
-     * @see GoogleAuthenticator#MAX_WINDOW
-     * @see #authorize(String, int, int)
-     */
+    @Override
     @SuppressWarnings("UnusedDeclaration")
     public boolean authorizeUser(
             String userName,
@@ -576,28 +517,7 @@ public final class GoogleAuthenticator {
         return null;
     }
 
-    /**
-     * Checks a verification code against a secret key using the current time.
-     * The algorithm also checks in a time window whose size is fixed to a value
-     * of [-(window - 1)/2, +(window - 1)/2] time intervals. The maximum size of
-     * the window is specified by the <code>MAX_WINDOW</code> constant and
-     * cannot be overridden.
-     * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
-     *
-     * @param secret           the Base32 encoded secret key.
-     * @param verificationCode the verification code.
-     * @param window           the window size to use during the validation
-     *                         process.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if a failure occurs during the
-     *                                      calculation of the validation code.
-     *                                      The only failures that should occur
-     *                                      are related with the cryptographic
-     *                                      functions provided by the JCE.
-     * @see GoogleAuthenticator#MAX_WINDOW
-     */
+    @Override
     public boolean authorize(
             String secret,
             int verificationCode,

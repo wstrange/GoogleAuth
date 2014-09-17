@@ -45,6 +45,25 @@ scanning the `META-INF/services` package looking for a file named
 `com.warrenstrange.googleauth.ICredentialRepository` and, if found, loading the
 provider classes listed therein.
 
+Compile-Time Requirements
+-------------------------
+
+To successfully compile this library a Java SE 7 compiler is required and
+sources must be compiled at least at language level 7.0.
+
+Dependencies
+-------------------------
+
+This library depends on the following libraries:
+
+  * Apache Commons Codec.
+  * JAX-RS v. 2.x (provided scope).
+  * JAX-RS v. 2.x implementation (provided scope).
+  * JUnit (test scope).
+
+Since this library is a Maven project, always refer to `pom.xml` for up-to-date
+dependencies and further details.
+
 Client Applications
 -------------------
 
