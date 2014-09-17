@@ -4,6 +4,7 @@ import org.apache.commons.codec.binary.Base32;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
@@ -322,8 +323,8 @@ public final class GoogleAuthenticator {
         byte[] data = new byte[8];
         long value = tm;
 
-        // Converting the instant of time from the long representation to an
-        // array of bytes.
+        // Converting the instant of time from the long representation to a
+        // big-endian array of bytes (RFC4226, 5.2. Description).
         for (int i = 8; i-- > 0; value >>>= 8) {
             data[i] = (byte) value;
         }
@@ -341,22 +342,23 @@ public final class GoogleAuthenticator {
             // Processing the instant of time and getting the encrypted data.
             byte[] hash = mac.doFinal(data);
 
-            // Building the validation code.
-            int offset = hash[20 - 1] & 0xF;
+            // Building the validation code performing dynamic truncation
+            // (RFC4226, 5.3. Generating an HOTP value)
+            int offset = hash[hash.length - 1] & 0xF;
 
-            // We are using a long because Java hasn't got an unsigned integer type.
+            // We are using a long because Java hasn't got an unsigned integer type
+            // and we need 32 unsigned bits).
             long truncatedHash = 0;
 
             for (int i = 0; i < 4; ++i) {
-                //truncatedHash = (truncatedHash * 256) & 0xFFFFFFFF;
                 truncatedHash <<= 8;
 
-                // Java bytes are signed but we need an unsigned one:
+                // Java bytes are signed but we need an unsigned integer:
                 // cleaning off all but the LSB.
                 truncatedHash |= (hash[offset + i] & 0xFF);
             }
 
-            // Cleaning bits higher than 32nd and calculating the module with the
+            // Cleaning bits higher than the 32nd and calculating the module with the
             // maximum validation code value.
             truncatedHash &= 0x7FFFFFFF;
             truncatedHash %= SECRET_KEY_MODULE;
