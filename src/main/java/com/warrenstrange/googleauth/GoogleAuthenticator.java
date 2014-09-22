@@ -79,11 +79,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     public static final int MAX_WINDOW = 17;
 
     /**
-     * Modulus used to truncate the secret key.
-     */
-    public static final int SECRET_KEY_MODULE = 1000 * 1000;
-
-    /**
      * The number of seconds a key is valid.
      */
     public static final long KEY_VALIDATION_INTERVAL_MS =
@@ -150,6 +145,21 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
 
     /**
+     * Minimum secret key length (inclusive).
+     */
+    private static final int SECRET_KEY_LENGTH_MIN = 6;
+
+    /**
+     * Maximum secret key length (inclusive).
+     */
+    private static final int SECRET_KEY_LENGTH_MAX = 9;
+
+    /**
+     * The secret key length used by the current instance.
+     */
+    private final int secretKeyModule;
+
+    /**
      * The initial windowSize used when validating the codes. We are using
      * Google's default behaviour of using a window size equal to 3. The maximum
      * window size is 17.
@@ -159,18 +169,43 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
      * Random instances are required to be thread-safe, no synchronisation is
-     * required in the methods of this class using this instance. Thread-safety
+     * required in the methods of this class using this instance.  Thread-safety
      * of this class was a de-facto standard in previous versions of Java so
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
     private ReseedingSecureRandom secureRandom;
 
+    /**
+     * Default constructor.
+     */
     public GoogleAuthenticator() {
+        this(SECRET_KEY_LENGTH_MIN);
+    }
+
+    /**
+     * This constructor builds a Google Authenticator object and set the
+     * secret key length to the specified value.
+     *
+     * @param secretKeyLength The secret key length, which must satisfy
+     *                        <code>secretKeyLength &ge; SECRET_KEY_LENGTH_MIN</code>
+     *                        and
+     *                        <code>secretKeyLength &le; SECRET_KEY_LENGTH_MAX</code>.
+     */
+    public GoogleAuthenticator(int secretKeyLength) {
         secureRandom = new ReseedingSecureRandom(
                 RANDOM_NUMBER_ALGORITHM,
                 RANDOM_NUMBER_ALGORITHM_PROVIDER);
 
+        if (secretKeyLength < SECRET_KEY_LENGTH_MIN
+                || secretKeyLength > SECRET_KEY_LENGTH_MAX) {
+            throw new IllegalArgumentException(String.format(
+                    "Length must be in the [%d, %d] range.",
+                    SECRET_KEY_LENGTH_MIN,
+                    SECRET_KEY_LENGTH_MAX));
+        }
+
+        this.secretKeyModule = (int) Math.pow(10, secretKeyLength);
     }
 
     /**
@@ -182,7 +217,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the validation code for the provided key at the specified instant
      * of time.
      */
-    private static int calculateCode(byte[] key, long tm) {
+    private int calculateCode(byte[] key, long tm) {
         // Allocating an array of bytes to represent the specified instant
         // of time.
         byte[] data = new byte[8];
@@ -226,7 +261,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
             // Cleaning bits higher than the 32nd and calculating the module with the
             // maximum validation code value.
             truncatedHash &= 0x7FFFFFFF;
-            truncatedHash %= SECRET_KEY_MODULE;
+            truncatedHash %= this.secretKeyModule;
 
             // Returning the validation code to the caller.
             return (int) truncatedHash;
@@ -241,6 +276,23 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     }
 
     /**
+     * Get the current TOTP password of the specified key.
+     *
+     * @param secret The shared secret.
+     * @return the current TOTP password of the specified key.
+     */
+    public int getCurrentCode(String secret) {
+        // Decoding the secret key to get its raw byte representation.
+        byte[] decodedKey = decodeSecretKey(secret);
+
+        // Convert the Unix time into a 30 second "window" as specified by the
+        // TOTP specification.
+        final long timeWindow = new Date().getTime() / KEY_VALIDATION_INTERVAL_MS;
+
+        return calculateCode(decodedKey, timeWindow);
+    }
+
+    /**
      * This method implements the algorithm specified in RFC 6238 to check if a
      * validation code is valid in a given instant of time for the given secret
      * key.
@@ -252,14 +304,13 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
      */
-    private static boolean checkCode(
+    private boolean checkCode(
             String secret,
             long code,
             long tm,
             int window) {
         // Decoding the secret key to get its raw byte representation.
-        Base32 codec = new Base32();
-        byte[] decodedKey = codec.decode(secret);
+        byte[] decodedKey = decodeSecretKey(secret);
 
         // convert unix time into a 30 second "window" as specified by the
         // TOTP specification. Using Google's default interval of 30 seconds.
@@ -295,7 +346,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
         // Extracting the bytes making up the secret key.
         byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
-        String generatedKey = calculateSecretKey(secretKey);
+        String generatedKey = encodeSecretKey(secretKey);
 
         // Generating the verification code at time = 0.
         int validationCode = calculateValidationCode(secretKey);
@@ -422,12 +473,25 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @param secretKey a random byte buffer.
      * @return the secret key.
      */
-    private String calculateSecretKey(byte[] secretKey) {
+    private String encodeSecretKey(byte[] secretKey) {
         Base32 codec = new Base32();
         byte[] encodedKey = codec.encode(secretKey);
 
         // Creating a string with the Base32 encoded bytes.
         return new String(encodedKey);
+    }
+
+    /**
+     * This method decodes the shared secret from its Base32 representation.
+     *
+     * @param secret The Base32-encoded shared secret.
+     * @return the secret key.
+     */
+    private byte[] decodeSecretKey(String secret) {
+        Base32 codec = new Base32();
+        byte[] decodedKey = codec.decode(secret);
+
+        return decodedKey;
     }
 
     @Override
@@ -529,7 +593,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         }
 
         // Checking if the verification code is between the legal bounds.
-        if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
+        if (verificationCode <= 0 || verificationCode >= this.secretKeyModule) {
             return false;
         }
 
