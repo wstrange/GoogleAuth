@@ -63,6 +63,7 @@ Free Documentation License''.
 
 @menu
 * Introduction::
+* Overview::
 * API Description::
 * API::
 * GNU Free Documentation License:: Copying and sharing this manual
@@ -139,6 +140,73 @@ are implemented as @acronym{POJO}s (using current Java jargon).
 Therefore, it can be included and used in any Java application and does not have
 dependencies with any framework or technology other than a Java @acronym{SE} 7
 runtime environment.
+
+@node Overview
+@chapter Overview
+The @acronym{TOTP} algorithm (specified by @acronym{RFC} 6238) is an extension
+of the @acronym{HOTP} algorithm that uses a time-based moving factor instead of
+an event counter.
+One of the purposes of that work is, in the words of the authors:
+
+@quotation
+   The proposed algorithm can be used across a wide range of network
+   applications, from remote Virtual Private Network (@acronym{VPN}) access and
+   Wi-Fi network logon to transaction-oriented Web applications.  The
+   authors believe that a common and shared algorithm will facilitate
+   adoption of two-factor authentication on the Internet by enabling
+   interoperability across commercial and open-source implementations.
+@author @acronym{RFC} 6238
+@end quotation
+
+In fact, as expected by the authors, both two-factor authentication and
+@acronym{TOTP} are being widely adopted.
+Google enabled @acronym{TOTP}-based two-factor authentication for its users
+and developed a software @acronym{TOTP} token generator,
+@emph{Google Authenticator}, running on all the mainstream smartphone operating
+systems, which is now the de-facto standard token generator for
+non-corporate use.
+
+@acronym{TOTP}-based two-factor authentication schemes usually require the user
+to send its @acronym{TOTP} password alongside its credentials.
+The @acronym{TOTP} password is time-based, it is calculated with a cryptographic
+algorithm and its validity is very short: @acronym{RFC} 6238 recommends to used
+a time-step size of 30 seconds.
+The very short expiration time of each password is a key security factor against
+attacks.
+
+The security analysis (@acronym{RFC} 4226) of this algorithm concludes that
+the best attack against the @acronym{HOTP} function is the @emph{brute force}
+attack.
+The security of the algorithm can be approximate (@acronym{RFC} 4226) as
+@tex
+$$ {\rm Security} = {s \cdot v \over 10^d} $$
+@end tex
+@noindent
+where @math{s} is the @emph{look-ahead synchronization window size}@footnote{Referred to
+simply as @emph{window size} in the rest of this manual.}, @math{v}
+is the number of @emph{verification attempts} and @math{d} is the number of
+@emph{digits} in the @acronym{TOTP} password. 
+That is: if a brute force attack with @math{v} verification attempts is used,
+then its probability of success is
+@tex
+$$ p = {s \cdot v \over 10^d} $$
+@end tex
+
+@acronym{RFC} 4226 recommends that @math{d \geq 6}, and this library validates
+6-digit @acronym{TOTP} passwords, which is the password length currently used
+by Google Authenticator.
+Passwords of up to 9 decimal digits could be used, which is the maximum
+that can be represented by the 31-bit string returned by the
+@emph{dynamic truncation} function.
+
+Evaluating the probability @math{p} of making a successful attack with @math{s = 10}
+and @math{d = 6} yields
+@tex
+$$ p = { v \over 10^5 } $$
+@end tex
+that is, @math{v} successes every 10.000 attempts.
+By limiting the number of unsuccessful authentication attempts a user can perform,
+a superior bound on @math{p} can be established that satisfies the security requirements.
 
 @node API Description
 @chapter @acronym{API} Description
