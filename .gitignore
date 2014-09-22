@@ -8,3 +8,8 @@ configure
 aclocal.m4
 config/
 config.*
+
+# texinfo
+stamp-vti
+version.texi
+*.info
