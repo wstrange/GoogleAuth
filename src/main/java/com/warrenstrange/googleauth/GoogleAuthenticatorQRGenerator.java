@@ -125,7 +125,7 @@ public final class GoogleAuthenticatorQRGenerator {
     /**
      * Returns the URL of a Google Chart API call to generate a QR barcode to
      * be loaded into the Google Authenticator application.  The user scans this
-     * bar code with the application on their smart phones or manually enter the
+     * bar code with the application on their smart phones or enters the
      * secret manually.
      * <p/>
      * The current implementation supports the following features:
