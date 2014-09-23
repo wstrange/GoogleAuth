@@ -73,9 +73,10 @@ public interface IGoogleAuthenticator {
     /**
      * Set the default window size used by this instance when an explicit value
      * is not specified. This is an integer value representing the number of 30
-     * second windows we check during the validation process, to account for
-     * differences between the server and the client clocks.
-     * The bigger the window, the more tolerant we are about clock skews.
+     * second windows that are checked during the validation process, to account
+     * for differences between the server and the client clocks.
+     * The bigger the window, the more tolerant the library code is about clock
+     * skews.
      *
      * @param s window size - must be >=1 and <=17.  Other values are ignored
      */
@@ -86,7 +87,8 @@ public interface IGoogleAuthenticator {
      * The algorithm also checks in a time window whose size determined by the
      * <code>windowSize</code> property of this class.
      * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
+     * The default value of 30 seconds recommended by RFC 6238 is used for the
+     * interval size.
      *
      * @param secret           the Base32 encoded secret key.
      * @param verificationCode the verification code.
@@ -148,7 +150,8 @@ public interface IGoogleAuthenticator {
      * the window is specified by the <code>MAX_WINDOW</code> constant and
      * cannot be overridden.
      * <p/>
-     * We are using Google's default value of 30 seconds for the interval size.
+     * The default value of 30 seconds recommended by RFC 6238 is used for the
+     * interval size.
      *
      * @param secret           the Base32 encoded secret key.
      * @param verificationCode the verification code.
