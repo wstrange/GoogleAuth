@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -300,9 +301,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     @Override
     public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
-        if (userName == null) {
-            throw new IllegalArgumentException("User name cannot be null.");
-        }
+        checkNotNull(userName, "User name cannot be null.");
 
         GoogleAuthenticatorKey key = createCredentials();
 
@@ -346,10 +345,8 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the scratch code.
      */
     private int calculateScratchCode(byte[] scratchCodeBuffer) {
-        if (scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE) {
-            throw new IllegalArgumentException("The provided random byte buffer " +
-                    "is too small.");
-        }
+        checkArgument(scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE,
+                "The provided random byte buffer is too small.");
 
         int scratchCode = 0;
 
@@ -422,9 +419,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
         // Checking user input and failing if the secret key was not provided.
-        if (secret == null) {
-            throw new GoogleAuthenticatorException("Secret cannot be null.");
-        }
+        checkNotNull(secret, "Secret cannot be null.");
 
         // Checking if the verification code is between the legal bounds.
         if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
