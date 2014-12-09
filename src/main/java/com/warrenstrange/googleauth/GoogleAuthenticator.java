@@ -70,11 +70,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
-     * Modulus used to truncate the secret key.
-     */
-    public static final int SECRET_KEY_MODULE = 1000 * 1000;
-
-    /**
      * The logger for this class.
      */
     private static final Logger LOGGER =
@@ -171,7 +166,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the validation code for the provided key at the specified instant
      * of time.
      */
-    private static int calculateCode(byte[] key, long tm) {
+    private int calculateCode(byte[] key, long tm) {
         // Allocating an array of bytes to represent the specified instant
         // of time.
         byte[] data = new byte[8];
@@ -212,10 +207,10 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
                 truncatedHash |= (hash[offset + i] & 0xFF);
             }
 
-            // Cleaning bits higher than the 32nd and calculating the module with the
-            // maximum validation code value.
+            // Clean bits higher than the 32nd (inclusive) and calculate the
+            // module with the maximum validation code value.
             truncatedHash &= 0x7FFFFFFF;
-            truncatedHash %= SECRET_KEY_MODULE;
+            truncatedHash %= config.getKeyModulus();
 
             // Returning the validation code to the caller.
             return (int) truncatedHash;
@@ -345,8 +340,8 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the scratch code.
      */
     private int calculateScratchCode(byte[] scratchCodeBuffer) {
-        checkArgument(scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE,
-                "The provided random byte buffer is too small.");
+        checkArgument(scratchCodeBuffer.length >= BYTES_PER_SCRATCH_CODE,
+                "The provided random byte buffer is too small:", scratchCodeBuffer.length);
 
         int scratchCode = 0;
 
@@ -422,7 +417,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         checkNotNull(secret, "Secret cannot be null.");
 
         // Checking if the verification code is between the legal bounds.
-        if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
+        if (verificationCode <= 0 || verificationCode >= this.config.getKeyModulus()) {
             return false;
         }
 

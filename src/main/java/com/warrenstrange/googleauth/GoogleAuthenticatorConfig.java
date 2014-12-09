@@ -35,37 +35,31 @@ import java.util.concurrent.TimeUnit;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class GoogleAuthenticatorConfig {
-    private final long timeStepSizeInMillis;
-    private final int windowSize;
+    private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);
+    private int windowSize = 3;
+    private int codeDigits = 6;
+    private int keyModulus = (int) Math.pow(10, codeDigits);
 
     /**
-     * Builds an instance of this class and sets the timeStepSizeInMillis
-     * and windowSize properties to the corresponding values.
+     * Returns the key module.
      *
-     * @param timeStepSizeInMillis the time step size (see
-     *                             #timeStepSizeInMillis).
-     * @param windowSize           The window size (see #windowSize).
+     * @return the key module.
      */
-    @SuppressWarnings("UnusedDeclaration")
-    public GoogleAuthenticatorConfig(long timeStepSizeInMillis, int windowSize) {
-        checkArgument(timeStepSizeInMillis > 0, "Time step size must be positive.");
-        checkArgument(windowSize > 0, "Window number must be positive.");
-
-        this.timeStepSizeInMillis = timeStepSizeInMillis;
-        this.windowSize = windowSize;
+    public int getKeyModulus() {
+        return keyModulus;
     }
 
     /**
-     * Builds an instance of this class setting its properties to their
-     * default values.
+     * Returns the number of digits in the generated code.
+     *
+     * @return the number of digits in the generated code.
      */
-    public GoogleAuthenticatorConfig() {
-        windowSize = 3;
-        timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);
+    public int getCodeDigits() {
+        return codeDigits;
     }
 
     /**
-     * The time step size, in milliseconds, as specified by RFC 6238.
+     * Returns the time step size, in milliseconds, as specified by RFC 6238.
      * The default value is 30.000.
      *
      * @return the time step size in milliseconds.
@@ -75,7 +69,7 @@ public class GoogleAuthenticatorConfig {
     }
 
     /**
-     * This is an integer value representing the number of windows of size
+     * Returns an integer value representing the number of windows of size
      * timeStepSizeInMillis that are checked during the validation process,
      * to account for differences between the server and the client clocks.
      * The bigger the window, the more tolerant the library code is about
@@ -90,5 +84,35 @@ public class GoogleAuthenticatorConfig {
      */
     public int getWindowSize() {
         return windowSize;
+    }
+
+    public static class GoogleAuthenticatorConfigBuilder {
+        private GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig();
+
+        public GoogleAuthenticatorConfig build() {
+            return config;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setCodeDigits(int codeDigits) {
+            checkArgument(codeDigits > 0, "Code digits must be positive.");
+            checkArgument(codeDigits >= 6, "The minimum number of digits is 6.");
+            checkArgument(codeDigits <= 8, "The maximum number of digits is 8.");
+
+            config.codeDigits = codeDigits;
+            config.keyModulus = (int) Math.pow(10, codeDigits);
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setTimeStepSizeInMillis(long timeStepSizeInMillis) {
+            checkArgument(timeStepSizeInMillis > 0, "Time step size must be positive.");
+            config.timeStepSizeInMillis = timeStepSizeInMillis;
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setWindowSize(int windowSize) {
+            checkArgument(windowSize > 0, "Window number must be positive.");
+            config.windowSize = windowSize;
+            return this;
+        }
     }
 }

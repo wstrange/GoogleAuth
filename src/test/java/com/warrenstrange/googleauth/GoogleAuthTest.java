@@ -114,8 +114,11 @@ public class GoogleAuthTest {
 
     @Test
     public void authorise() {
-        GoogleAuthenticatorConfig gac = new GoogleAuthenticatorConfig(TimeUnit.SECONDS.toMillis(30), 5);
-        GoogleAuthenticator ga = new GoogleAuthenticator(gac);
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(5);
+        GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorize(SECRET_KEY, VALIDATION_CODE);
 
@@ -124,8 +127,11 @@ public class GoogleAuthTest {
 
     @Test
     public void authoriseUser() {
-        GoogleAuthenticatorConfig gac = new GoogleAuthenticatorConfig(TimeUnit.SECONDS.toMillis(30), 5);
-        GoogleAuthenticator ga = new GoogleAuthenticator(gac);
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(5);
+        GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 
