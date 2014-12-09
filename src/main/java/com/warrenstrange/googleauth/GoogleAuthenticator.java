@@ -37,10 +37,10 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
@@ -69,25 +69,10 @@ import java.util.logging.Logger;
 public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
-     * Minimum validation window size.
-     */
-    public static final int MIN_WINDOW = 1;
-
-    /**
-     * Maximum validation window size.
-     */
-    public static final int MAX_WINDOW = 17;
-
-    /**
      * Modulus used to truncate the secret key.
      */
     public static final int SECRET_KEY_MODULE = 1000 * 1000;
 
-    /**
-     * The number of seconds a key is valid.
-     */
-    public static final long KEY_VALIDATION_INTERVAL_MS =
-            TimeUnit.SECONDS.toMillis(30);
     /**
      * The logger for this class.
      */
@@ -150,11 +135,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
 
     /**
-     * The initial windowSize used when validating the codes. We are using
-     * Google's default behaviour of using a window size equal to 3. The maximum
-     * window size is 17.
+     * The configuration used by the current instance.
      */
-    private AtomicInteger windowSize = new AtomicInteger(3);
+    private final GoogleAuthenticatorConfig config;
 
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
@@ -164,13 +147,18 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private ReseedingSecureRandom secureRandom;
+    private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
+            RANDOM_NUMBER_ALGORITHM,
+            RANDOM_NUMBER_ALGORITHM_PROVIDER);
 
     public GoogleAuthenticator() {
-        secureRandom = new ReseedingSecureRandom(
-                RANDOM_NUMBER_ALGORITHM,
-                RANDOM_NUMBER_ALGORITHM_PROVIDER);
+        config = new GoogleAuthenticatorConfig();
+    }
 
+    public GoogleAuthenticator(GoogleAuthenticatorConfig config) {
+        checkNotNull(config, "Configuration cannot be null.");
+
+        this.config = config;
     }
 
     /**
@@ -245,17 +233,17 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * validation code is valid in a given instant of time for the given secret
      * key.
      *
-     * @param secret the Base32 encoded secret key.
-     * @param code   the code to validate.
-     * @param tm     the instant of time to use during the validation process.
-     * @param window the window size to use during the validation process.
+     * @param secret    the Base32 encoded secret key.
+     * @param code      the code to validate.
+     * @param timestamp the instant of time to use during the validation process.
+     * @param window    the window size to use during the validation process.
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
      */
-    private static boolean checkCode(
+    private boolean checkCode(
             String secret,
             long code,
-            long tm,
+            long timestamp,
             int window) {
         // Decoding the secret key to get its raw byte representation.
         Base32 codec = new Base32();
@@ -263,7 +251,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
         // convert unix time into a 30 second "window" as specified by the
         // TOTP specification. Using Google's default interval of 30 seconds.
-        final long timeWindow = tm / KEY_VALIDATION_INTERVAL_MS;
+        final long timeWindow = timestamp / this.config.getTimeStepSizeInMillis();
 
         // Calculating the verification code of the given key in each of the
         // time intervals and returning true if the provided code is equal to
@@ -431,24 +419,24 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     }
 
     @Override
-    public int getWindowSize() {
-        return windowSize.get();
-    }
-
-    @Override
-    public void setWindowSize(int s) {
-        if (s >= MIN_WINDOW && s <= MAX_WINDOW) {
-            windowSize = new AtomicInteger(s);
-        } else {
-            throw new GoogleAuthenticatorException(
-                    String.format("Invalid window size: %d", s));
-        }
-    }
-
-    @Override
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
-        return authorize(secret, verificationCode, this.windowSize.get());
+        // Checking user input and failing if the secret key was not provided.
+        if (secret == null) {
+            throw new GoogleAuthenticatorException("Secret cannot be null.");
+        }
+
+        // Checking if the verification code is between the legal bounds.
+        if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
+            return false;
+        }
+
+        // Checking the validation code using the current UNIX time.
+        return checkCode(
+                secret,
+                verificationCode,
+                new Date().getTime(),
+                this.config.getWindowSize());
     }
 
     @Override
@@ -458,21 +446,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         ICredentialRepository repository = getValidCredentialRepository();
 
         return authorize(repository.getSecretKey(userName), verificationCode);
-    }
-
-    @Override
-    @SuppressWarnings("UnusedDeclaration")
-    public boolean authorizeUser(
-            String userName,
-            int verificationCode,
-            int window)
-            throws GoogleAuthenticatorException {
-        ICredentialRepository repository = getValidCredentialRepository();
-
-        return authorize(
-                repository.getSecretKey(userName),
-                verificationCode,
-                window);
     }
 
     /**
@@ -515,34 +488,5 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         }
 
         return null;
-    }
-
-    @Override
-    public boolean authorize(
-            String secret,
-            int verificationCode,
-            int window)
-            throws GoogleAuthenticatorException {
-        // Checking user input and failing if the secret key was not provided.
-        if (secret == null) {
-            throw new GoogleAuthenticatorException("Secret cannot be null.");
-        }
-
-        // Checking if the verification code is between the legal bounds.
-        if (verificationCode <= 0 || verificationCode >= SECRET_KEY_MODULE) {
-            return false;
-        }
-
-        // Checking if the window size is between the legal bounds.
-        if (window < MIN_WINDOW || window > MAX_WINDOW) {
-            throw new GoogleAuthenticatorException("Invalid window size.");
-        }
-
-        // Checking the validation code using the current UNIX time.
-        return checkCode(
-                secret,
-                verificationCode,
-                new Date().getTime(),
-                window);
     }
 }
