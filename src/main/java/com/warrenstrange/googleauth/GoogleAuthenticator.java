@@ -31,6 +31,7 @@
 package com.warrenstrange.googleauth;
 
 import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -241,9 +242,21 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
             long code,
             long timestamp,
             int window) {
+        byte[] decodedKey;
+
         // Decoding the secret key to get its raw byte representation.
-        Base32 codec = new Base32();
-        byte[] decodedKey = codec.decode(secret);
+        switch (config.getKeyRepresentation()) {
+            case BASE32:
+                Base32 codec32 = new Base32();
+                decodedKey = codec32.decode(secret);
+                break;
+            case BASE64:
+                Base64 codec64 = new Base64();
+                decodedKey = codec64.decode(secret);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown key representation type.");
+        }
 
         // convert unix time into a 30 second "window" as specified by the
         // TOTP specification. Using Google's default interval of 30 seconds.
@@ -403,10 +416,22 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the secret key.
      */
     private String calculateSecretKey(byte[] secretKey) {
-        Base32 codec = new Base32();
-        byte[] encodedKey = codec.encode(secretKey);
+        byte[] encodedKey;
 
-        // Creating a string with the Base32 encoded bytes.
+        switch (config.getKeyRepresentation()) {
+            case BASE32:
+                Base32 codec = new Base32();
+                encodedKey = codec.encode(secretKey);
+                break;
+            case BASE64:
+                Base64 codec64 = new Base64();
+                encodedKey = codec64.encode(secretKey);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown key representation type.");
+        }
+
+        // Creating a string in the specified representation.
         return new String(encodedKey);
     }
 

@@ -39,6 +39,7 @@ public class GoogleAuthenticatorConfig {
     private int windowSize = 3;
     private int codeDigits = 6;
     private int keyModulus = (int) Math.pow(10, codeDigits);
+    private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;
 
     /**
      * Returns the key module.
@@ -50,10 +51,20 @@ public class GoogleAuthenticatorConfig {
     }
 
     /**
+     * Returns the key representation.
+     *
+     * @return the key representation.
+     */
+    public KeyRepresentation getKeyRepresentation() {
+        return keyRepresentation;
+    }
+
+    /**
      * Returns the number of digits in the generated code.
      *
      * @return the number of digits in the generated code.
      */
+    @SuppressWarnings("UnusedDeclaration")
     public int getCodeDigits() {
         return codeDigits;
     }
@@ -112,6 +123,11 @@ public class GoogleAuthenticatorConfig {
         public GoogleAuthenticatorConfigBuilder setWindowSize(int windowSize) {
             checkArgument(windowSize > 0, "Window number must be positive.");
             config.windowSize = windowSize;
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setKeyRepresentation(KeyRepresentation keyRepresentation) {
+            config.keyRepresentation = keyRepresentation;
             return this;
         }
     }

@@ -68,7 +68,10 @@ public class GoogleAuthTest {
 
     @Test
     public void createCredentials() {
-        GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setKeyRepresentation(KeyRepresentation.BASE64);
+        GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator(gacb.build());
 
         final GoogleAuthenticatorKey key =
                 googleAuthenticator.createCredentials();
@@ -78,7 +81,7 @@ public class GoogleAuthTest {
         String otpAuthURL = GoogleAuthenticatorQRGenerator.getOtpAuthURL("Test Org.", "test@prova.org", key);
 
         System.out.println("Please register (otpauth uri): " + otpAuthURL);
-        System.out.println("Secret key is " + secret);
+        System.out.println("Base64-encoded secret key is " + secret);
 
         for (Integer i : scratchCodes) {
             if (!googleAuthenticator.validateScratchCode(i)) {
