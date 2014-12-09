@@ -116,15 +116,6 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void getCurrentCode() {
-        GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator(8);
-
-        int totpPassword = googleAuthenticator.getCurrentCode("CHNP5U3RRO42ICES");
-
-        System.out.println("Current TOTP password: " + totpPassword);
-    }
-
-    @Test
     public void authorise() {
         GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
