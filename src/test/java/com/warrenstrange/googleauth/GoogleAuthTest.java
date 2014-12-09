@@ -34,6 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Not really a unit test, but it shows the basic usage of this package.
@@ -55,8 +56,8 @@ public class GoogleAuthTest {
 
     // Change this to the saved secret from the running the above test.
     @SuppressWarnings("SpellCheckingInspection")
-    private static final String SECRET_KEY = "CBN54QPAB5LMWMQO";
-    private static final int VALIDATION_CODE = 808259;
+    private static final String SECRET_KEY = "KR52HV2U5Z4DWGLJ";
+    private static final int VALIDATION_CODE = 598775;
 
     @BeforeClass
     public static void setupMockCredentialRepository() {
@@ -67,7 +68,10 @@ public class GoogleAuthTest {
 
     @Test
     public void createCredentials() {
-        GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setKeyRepresentation(KeyRepresentation.BASE64);
+        GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator(gacb.build());
 
         final GoogleAuthenticatorKey key =
                 googleAuthenticator.createCredentials();
@@ -77,7 +81,7 @@ public class GoogleAuthTest {
         String otpAuthURL = GoogleAuthenticatorQRGenerator.getOtpAuthURL("Test Org.", "test@prova.org", key);
 
         System.out.println("Please register (otpauth uri): " + otpAuthURL);
-        System.out.println("Secret key is " + secret);
+        System.out.println("Base64-encoded secret key is " + secret);
 
         for (Integer i : scratchCodes) {
             if (!googleAuthenticator.validateScratchCode(i)) {
@@ -122,8 +126,11 @@ public class GoogleAuthTest {
 
     @Test
     public void authorise() {
-        GoogleAuthenticator ga = new GoogleAuthenticator();
-        ga.setWindowSize(5);  //should give 5 * 30 seconds of grace...
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(5);
+        GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorize(SECRET_KEY, VALIDATION_CODE);
 
@@ -132,8 +139,11 @@ public class GoogleAuthTest {
 
     @Test
     public void authoriseUser() {
-        GoogleAuthenticator ga = new GoogleAuthenticator();
-        ga.setWindowSize(5);  //should give 5 * 30 seconds of grace...
+        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(5);
+        GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 

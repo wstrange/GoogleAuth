@@ -31,16 +31,18 @@
 package com.warrenstrange.googleauth;
 
 import org.apache.commons.codec.binary.Base32;
+import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
@@ -68,21 +70,6 @@ import java.util.logging.Logger;
  */
 public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
-    /**
-     * Minimum validation window size.
-     */
-    public static final int MIN_WINDOW = 1;
-
-    /**
-     * Maximum validation window size.
-     */
-    public static final int MAX_WINDOW = 17;
-
-    /**
-     * The number of seconds a key is valid.
-     */
-    public static final long KEY_VALIDATION_INTERVAL_MS =
-            TimeUnit.SECONDS.toMillis(30);
     /**
      * The logger for this class.
      */
@@ -145,67 +132,30 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
 
     /**
-     * Minimum secret key length (inclusive).
+     * The configuration used by the current instance.
      */
-    private static final int SECRET_KEY_LENGTH_MIN = 6;
-
-    /**
-     * Maximum secret key length (inclusive).
-     */
-    private static final int SECRET_KEY_LENGTH_MAX = 9;
-
-    /**
-     * The secret key length used by the current instance.
-     */
-    private final int secretKeyModule;
-
-    /**
-     * The initial windowSize used when validating the codes. We are using
-     * Google's default behaviour of using a window size equal to 3. The maximum
-     * window size is 17.
-     */
-    private AtomicInteger windowSize = new AtomicInteger(3);
+    private final GoogleAuthenticatorConfig config;
 
     /**
      * The internal SecureRandom instance used by this class. Since as of Java 7
      * Random instances are required to be thread-safe, no synchronisation is
-     * required in the methods of this class using this instance.  Thread-safety
+     * required in the methods of this class using this instance. Thread-safety
      * of this class was a de-facto standard in previous versions of Java so
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private ReseedingSecureRandom secureRandom;
+    private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
+            RANDOM_NUMBER_ALGORITHM,
+            RANDOM_NUMBER_ALGORITHM_PROVIDER);
 
-    /**
-     * Default constructor.
-     */
     public GoogleAuthenticator() {
-        this(SECRET_KEY_LENGTH_MIN);
+        config = new GoogleAuthenticatorConfig();
     }
 
-    /**
-     * This constructor builds a Google Authenticator object and set the
-     * secret key length to the specified value.
-     *
-     * @param secretKeyLength The secret key length, which must satisfy
-     *                        <code>secretKeyLength &ge; SECRET_KEY_LENGTH_MIN</code>
-     *                        and
-     *                        <code>secretKeyLength &le; SECRET_KEY_LENGTH_MAX</code>.
-     */
-    public GoogleAuthenticator(int secretKeyLength) {
-        secureRandom = new ReseedingSecureRandom(
-                RANDOM_NUMBER_ALGORITHM,
-                RANDOM_NUMBER_ALGORITHM_PROVIDER);
+    public GoogleAuthenticator(GoogleAuthenticatorConfig config) {
+        checkNotNull(config, "Configuration cannot be null.");
 
-        if (secretKeyLength < SECRET_KEY_LENGTH_MIN
-                || secretKeyLength > SECRET_KEY_LENGTH_MAX) {
-            throw new IllegalArgumentException(String.format(
-                    "Length must be in the [%d, %d] range.",
-                    SECRET_KEY_LENGTH_MIN,
-                    SECRET_KEY_LENGTH_MAX));
-        }
-
-        this.secretKeyModule = (int) Math.pow(10, secretKeyLength);
+        this.config = config;
     }
 
     /**
@@ -258,10 +208,10 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
                 truncatedHash |= (hash[offset + i] & 0xFF);
             }
 
-            // Cleaning bits higher than the 32nd and calculating the module with the
-            // maximum validation code value.
+            // Clean bits higher than the 32nd (inclusive) and calculate the
+            // module with the maximum validation code value.
             truncatedHash &= 0x7FFFFFFF;
-            truncatedHash %= this.secretKeyModule;
+            truncatedHash %= config.getKeyModulus();
 
             // Returning the validation code to the caller.
             return (int) truncatedHash;
@@ -276,45 +226,41 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     }
 
     /**
-     * Get the current TOTP password of the specified key.
-     *
-     * @param secret The shared secret.
-     * @return the current TOTP password of the specified key.
-     */
-    public int getCurrentCode(String secret) {
-        // Decoding the secret key to get its raw byte representation.
-        byte[] decodedKey = decodeSecretKey(secret);
-
-        // Convert the Unix time into a 30 second "window" as specified by the
-        // TOTP specification.
-        final long timeWindow = new Date().getTime() / KEY_VALIDATION_INTERVAL_MS;
-
-        return calculateCode(decodedKey, timeWindow);
-    }
-
-    /**
      * This method implements the algorithm specified in RFC 6238 to check if a
      * validation code is valid in a given instant of time for the given secret
      * key.
      *
-     * @param secret the Base32 encoded secret key.
-     * @param code   the code to validate.
-     * @param tm     the instant of time to use during the validation process.
-     * @param window the window size to use during the validation process.
+     * @param secret    the Base32 encoded secret key.
+     * @param code      the code to validate.
+     * @param timestamp the instant of time to use during the validation process.
+     * @param window    the window size to use during the validation process.
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
      */
     private boolean checkCode(
             String secret,
             long code,
-            long tm,
+            long timestamp,
             int window) {
+        byte[] decodedKey;
+
         // Decoding the secret key to get its raw byte representation.
-        byte[] decodedKey = decodeSecretKey(secret);
+        switch (config.getKeyRepresentation()) {
+            case BASE32:
+                Base32 codec32 = new Base32();
+                decodedKey = codec32.decode(secret);
+                break;
+            case BASE64:
+                Base64 codec64 = new Base64();
+                decodedKey = codec64.decode(secret);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown key representation type.");
+        }
 
         // convert unix time into a 30 second "window" as specified by the
         // TOTP specification. Using Google's default interval of 30 seconds.
-        final long timeWindow = tm / KEY_VALIDATION_INTERVAL_MS;
+        final long timeWindow = timestamp / this.config.getTimeStepSizeInMillis();
 
         // Calculating the verification code of the given key in each of the
         // time intervals and returning true if the provided code is equal to
@@ -346,7 +292,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
         // Extracting the bytes making up the secret key.
         byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
-        String generatedKey = encodeSecretKey(secretKey);
+        String generatedKey = calculateSecretKey(secretKey);
 
         // Generating the verification code at time = 0.
         int validationCode = calculateValidationCode(secretKey);
@@ -363,9 +309,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     @Override
     public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
-        if (userName == null) {
-            throw new IllegalArgumentException("User name cannot be null.");
-        }
+        checkNotNull(userName, "User name cannot be null.");
 
         GoogleAuthenticatorKey key = createCredentials();
 
@@ -409,10 +353,8 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the scratch code.
      */
     private int calculateScratchCode(byte[] scratchCodeBuffer) {
-        if (scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE) {
-            throw new IllegalArgumentException("The provided random byte buffer " +
-                    "is too small.");
-        }
+        checkArgument(scratchCodeBuffer.length >= BYTES_PER_SCRATCH_CODE,
+                "The provided random byte buffer is too small:", scratchCodeBuffer.length);
 
         int scratchCode = 0;
 
@@ -473,46 +415,43 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @param secretKey a random byte buffer.
      * @return the secret key.
      */
-    private String encodeSecretKey(byte[] secretKey) {
-        Base32 codec = new Base32();
-        byte[] encodedKey = codec.encode(secretKey);
+    private String calculateSecretKey(byte[] secretKey) {
+        byte[] encodedKey;
 
-        // Creating a string with the Base32 encoded bytes.
-        return new String(encodedKey);
-    }
-
-    /**
-     * This method decodes the shared secret from its Base32 representation.
-     *
-     * @param secret The Base32-encoded shared secret.
-     * @return the secret key.
-     */
-    private byte[] decodeSecretKey(String secret) {
-        Base32 codec = new Base32();
-        byte[] decodedKey = codec.decode(secret);
-
-        return decodedKey;
-    }
-
-    @Override
-    public int getWindowSize() {
-        return windowSize.get();
-    }
-
-    @Override
-    public void setWindowSize(int s) {
-        if (s >= MIN_WINDOW && s <= MAX_WINDOW) {
-            windowSize = new AtomicInteger(s);
-        } else {
-            throw new GoogleAuthenticatorException(
-                    String.format("Invalid window size: %d", s));
+        switch (config.getKeyRepresentation()) {
+            case BASE32:
+                Base32 codec = new Base32();
+                encodedKey = codec.encode(secretKey);
+                break;
+            case BASE64:
+                Base64 codec64 = new Base64();
+                encodedKey = codec64.encode(secretKey);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown key representation type.");
         }
+
+        // Creating a string in the specified representation.
+        return new String(encodedKey);
     }
 
     @Override
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
-        return authorize(secret, verificationCode, this.windowSize.get());
+        // Checking user input and failing if the secret key was not provided.
+        checkNotNull(secret, "Secret cannot be null.");
+
+        // Checking if the verification code is between the legal bounds.
+        if (verificationCode <= 0 || verificationCode >= this.config.getKeyModulus()) {
+            return false;
+        }
+
+        // Checking the validation code using the current UNIX time.
+        return checkCode(
+                secret,
+                verificationCode,
+                new Date().getTime(),
+                this.config.getWindowSize());
     }
 
     @Override
@@ -522,21 +461,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         ICredentialRepository repository = getValidCredentialRepository();
 
         return authorize(repository.getSecretKey(userName), verificationCode);
-    }
-
-    @Override
-    @SuppressWarnings("UnusedDeclaration")
-    public boolean authorizeUser(
-            String userName,
-            int verificationCode,
-            int window)
-            throws GoogleAuthenticatorException {
-        ICredentialRepository repository = getValidCredentialRepository();
-
-        return authorize(
-                repository.getSecretKey(userName),
-                verificationCode,
-                window);
     }
 
     /**
@@ -579,34 +503,5 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         }
 
         return null;
-    }
-
-    @Override
-    public boolean authorize(
-            String secret,
-            int verificationCode,
-            int window)
-            throws GoogleAuthenticatorException {
-        // Checking user input and failing if the secret key was not provided.
-        if (secret == null) {
-            throw new GoogleAuthenticatorException("Secret cannot be null.");
-        }
-
-        // Checking if the verification code is between the legal bounds.
-        if (verificationCode <= 0 || verificationCode >= this.secretKeyModule) {
-            return false;
-        }
-
-        // Checking if the window size is between the legal bounds.
-        if (window < MIN_WINDOW || window > MAX_WINDOW) {
-            throw new GoogleAuthenticatorException("Invalid window size.");
-        }
-
-        // Checking the validation code using the current UNIX time.
-        return checkCode(
-                secret,
-                verificationCode,
-                new Date().getTime(),
-                window);
     }
 }
