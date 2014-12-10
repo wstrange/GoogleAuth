@@ -133,7 +133,8 @@ public class GoogleAuthTest {
         GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
-                        .setWindowSize(5);
+                        .setWindowSize(5)
+                        .setCodeDigits(6);
         GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
