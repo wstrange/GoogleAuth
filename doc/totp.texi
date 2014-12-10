@@ -281,11 +281,6 @@ Create new credentials.
 Validate the specified @command{verificationCode} with the specified
 @command{secret} using the @acronym{TOTP} algorithm.
 
-@item authorize(String secret, int verificationCode, int window)
-Validate the specified @command{verificationCode} with the specified
-@command{secret} using the @acronym{TOTP} algorithm and the specified
-@command{window} size.
-
 @end table 
 
 When support for the @command{ICredentialRepository} callbacks was designed,
@@ -295,8 +290,11 @@ Such methods are the following:
 
 @table @command
 @item createCredentials(String userName)
+Create new credentials.
+
 @item authorizeUser(String userName, int verificationCode)
-@item authorizeUser(String userName, int verificationCode, int window)
+Validate the specified @command{verificationCode} with the secret of the
+user with the specified @command{userName} using the @acronym{TOTP} algorithm.
 @end table
 
 @noindent
@@ -520,12 +518,11 @@ currently allows the time-step size to be overridden.
 
 To authorize a @acronym{TOTP} password, one of the following methods shall be
 used:
-@example
-boolean authorize(String secret, int verificationCode);
-boolean authorize(String secret,
-                  int verificationCode,
-                  int window);
-@end example
+@table @command
+@item boolean authorize(String secret, int verificationCode);
+Authorize the specified TOTP password @command{verificationCode} using the
+specified secret key @command{secret}.
+@end table
 
 When the number @math{x} of time-step windows to use is specified, the
 implementation will check all the integral time-step in an interval @math{I}
@@ -539,6 +536,13 @@ The @acronym{API} is currently published by the following classes and interfaces
 @table @command
 @item GoogleAuthenticator
 The @command{IGoogleAuthenticator} implementation.
+
+@item GoogleAuthenticatorConfig
+The configuration parameters used during the TOTP password validation, including
+time step size, window size, number of digits and key representations.
+
+@item GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder
+The factory for @code{GoogleAuthenticatorConfig} instances.
 
 @item GoogleAuthenticatorException
 The root exception used by the library.
@@ -559,6 +563,14 @@ where newly-generated credentials are @emph{stored} and keys are
 
 @item IGoogleAuthenticator
 This is the main @emph{API} interface and it publishes the library entry points.
+
+@item KeyRepresentation
+An enumeration of all the available secret key representations, currently:
+
+@itemize
+@item @code{BASE32}
+@item @code{BASE64}
+@end itemize
 
 @end table
 
@@ -582,15 +594,62 @@ supports them, currently there is no way to override the usage of
 
 @item
 A time-step size of 30 seconds is used, as recommended in by @acronym{RFC} 6238.
-Although the code already supports different size, currently there is no way to
-override the usage of the default value.
 
 @end itemize
 
-At the time of writing, the Google Authenticator application uses the same
-values and does not support different hash algorithm and time-step sizes.
-The authors have thus chosen to keep this implementation in line with it and to
-not provide overridable algorithm configuration parameters.
+@noindent
+The parameters used during the TOTP password validation are:
+
+@itemize
+@item Time step size.
+@item Windows size.
+@item Number of digits (key modulus).
+@end itemize
+
+@noindent
+Furthermore, the secret key can be provided in one of the supported
+representations:
+
+@itemize
+@item @code{BASE32}.
+@item @code{BASE64}.
+@end itemize
+
+Base32 is the representation used by default by Google Authenticator, and
+Base64 is offered since it is the default representation used by
+@acronym{RFC} 6030, @emph{Portable Symmetric Key Container (PSKC)}, since it
+is commonly used by software platforms and hardware TOTP token providers.
+
+All this parameters can be configured by passing a @code{GoogleAuthenticatorConfig}
+instance to a @code{GoogleAuthenticator} constructor.
+
+@subsection @code{GoogleAuthenticatorConfigBuilder}
+@code{GoogleAuthenticatorConfig} instances can only be built using
+@code{GoogleAuthenticatorConfigBuilder} instances.
+The following fragment, for example, builds a @code{GoogleAuthenticator}
+instance with the following characteristics:
+
+@itemize
+@item
+It uses a time step size of one minute.
+
+@item
+It validate TOTP password checking an interval of 5 time steps centered at the current time.
+
+@item
+It validates and creates TOTP passwords of 8 digits.
+
+@end itemize
+
+@example
+GoogleAuthenticatorConfigBuilder gacb =
+  new GoogleAuthenticatorConfigBuilder()
+    .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(60))
+    .setWindowSize(5)
+    .setCodeDigits(8);
+GoogleAuthenticator ga =
+  new GoogleAuthenticator(gacb.build());
+@end example
 
 @section @command{GoogleAuthenticatorException}
 This class is the root exception used by library methods.
@@ -719,23 +778,7 @@ This method validates a verification code of the specified user whose
 private key is retrieved from the configured credential repository.
 This method delegates the validation to the @code{authorize} method.
 
-@item boolean authorizeUser(String userName, int verificationCode, int window);
-This method validates a verification code of the specified user whose
-private key is retrieved from the configured credential repository.
-This method delegates the validation to the @code{authorize} method.
-
-@item boolean authorize(String secret, int verificationCode, int window);
-Checks a verification code against a secret key using the current time.
-The algorithm also checks in a time window whose size is fixed to a value
-of @math{I = [\lfloor -(x-1)/2 \rfloor, \lfloor x/2 \rfloor]} time intervals.
-The maximum size of the window is specified by the @code{MAX_WINDOW}
-constant and cannot be overridden.
-The default value of 30 seconds recommended by @acronym{RFC} 6238 is used for
-the interval size.
-
-
 @end table
-
 
 @node GNU Free Documentation License
 @appendix GNU Free Documentation License

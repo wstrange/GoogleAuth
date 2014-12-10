@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([GoogleAuth], [0.3.1], [enrico.m.crisostomo@gmail.com])
+AC_INIT([GoogleAuth], [0.4], [enrico.m.crisostomo@gmail.com])
 AC_CONFIG_AUX_DIR([config])
 
 # Initialize Automake
