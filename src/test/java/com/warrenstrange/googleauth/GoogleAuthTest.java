@@ -30,6 +30,7 @@
 
 package com.warrenstrange.googleauth;
 
+import com.warrenstrange.googleauth.GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -68,8 +69,8 @@ public class GoogleAuthTest {
 
     @Test
     public void createCredentials() {
-        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
-                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+        GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfigBuilder()
                         .setKeyRepresentation(KeyRepresentation.BASE64);
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator(gacb.build());
 
@@ -117,8 +118,8 @@ public class GoogleAuthTest {
 
     @Test
     public void authorise() {
-        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
-                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+        GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
                         .setWindowSize(5);
         GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
@@ -130,10 +131,11 @@ public class GoogleAuthTest {
 
     @Test
     public void authoriseUser() {
-        GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder gacb =
-                new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
+        GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
-                        .setWindowSize(5);
+                        .setWindowSize(5)
+                        .setCodeDigits(6);
         GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);

@@ -33,6 +33,7 @@ package com.warrenstrange.googleauth;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class GoogleAuthenticatorConfig {
     private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);
@@ -127,6 +128,7 @@ public class GoogleAuthenticatorConfig {
         }
 
         public GoogleAuthenticatorConfigBuilder setKeyRepresentation(KeyRepresentation keyRepresentation) {
+            checkNotNull(keyRepresentation, "Key representation cannot be null.");
             config.keyRepresentation = keyRepresentation;
             return this;
         }
