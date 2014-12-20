@@ -34,7 +34,7 @@
 
     <groupId>com.warrenstrange</groupId>
     <artifactId>googleauth</artifactId>
-    <version>0.4.1</version>
+    <version>0.4.2</version>
     <packaging>jar</packaging>
 
     <name>googleauth</name>
@@ -67,11 +67,6 @@
             <artifactId>jersey-common</artifactId>
             <version>2.13</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
         </dependency>
     </dependencies>
 

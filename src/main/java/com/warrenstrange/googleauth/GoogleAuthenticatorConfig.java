@@ -32,9 +32,6 @@ package com.warrenstrange.googleauth;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class GoogleAuthenticatorConfig {
     private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);
     private int windowSize = 3;
@@ -106,9 +103,17 @@ public class GoogleAuthenticatorConfig {
         }
 
         public GoogleAuthenticatorConfigBuilder setCodeDigits(int codeDigits) {
-            checkArgument(codeDigits > 0, "Code digits must be positive.");
-            checkArgument(codeDigits >= 6, "The minimum number of digits is 6.");
-            checkArgument(codeDigits <= 8, "The maximum number of digits is 8.");
+            if (codeDigits <= 0) {
+                throw new IllegalArgumentException("Code digits must be positive.");
+            }
+
+            if (codeDigits < 6) {
+                throw new IllegalArgumentException("The minimum number of digits is 6.");
+            }
+
+            if (codeDigits > 8) {
+                throw new IllegalArgumentException("The maximum number of digits is 8.");
+            }
 
             config.codeDigits = codeDigits;
             config.keyModulus = (int) Math.pow(10, codeDigits);
@@ -116,19 +121,28 @@ public class GoogleAuthenticatorConfig {
         }
 
         public GoogleAuthenticatorConfigBuilder setTimeStepSizeInMillis(long timeStepSizeInMillis) {
-            checkArgument(timeStepSizeInMillis > 0, "Time step size must be positive.");
+            if (timeStepSizeInMillis <= 0) {
+                throw new IllegalArgumentException("Time step size must be positive.");
+            }
+
             config.timeStepSizeInMillis = timeStepSizeInMillis;
             return this;
         }
 
         public GoogleAuthenticatorConfigBuilder setWindowSize(int windowSize) {
-            checkArgument(windowSize > 0, "Window number must be positive.");
+            if (windowSize <= 0) {
+                throw new IllegalArgumentException("Window number must be positive.");
+            }
+
             config.windowSize = windowSize;
             return this;
         }
 
         public GoogleAuthenticatorConfigBuilder setKeyRepresentation(KeyRepresentation keyRepresentation) {
-            checkNotNull(keyRepresentation, "Key representation cannot be null.");
+            if (keyRepresentation == null) {
+                throw new IllegalArgumentException("Key representation cannot be null.");
+            }
+
             config.keyRepresentation = keyRepresentation;
             return this;
         }

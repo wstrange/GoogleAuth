@@ -41,9 +41,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
  * based one-time password algorithm) and has been tested again Google's
@@ -153,7 +150,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     }
 
     public GoogleAuthenticator(GoogleAuthenticatorConfig config) {
-        checkNotNull(config, "Configuration cannot be null.");
+        if (config == null) {
+            throw new IllegalArgumentException("Configuration cannot be null.");
+        }
 
         this.config = config;
     }
@@ -309,7 +308,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     @Override
     public GoogleAuthenticatorKey createCredentials(String userName) {
         // Further validation will be performed by the configured provider.
-        checkNotNull(userName, "User name cannot be null.");
+        if (userName == null) {
+            throw new IllegalArgumentException("User name cannot be null.");
+        }
 
         GoogleAuthenticatorKey key = createCredentials();
 
@@ -353,8 +354,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the scratch code.
      */
     private int calculateScratchCode(byte[] scratchCodeBuffer) {
-        checkArgument(scratchCodeBuffer.length >= BYTES_PER_SCRATCH_CODE,
-                "The provided random byte buffer is too small:", scratchCodeBuffer.length);
+        if (scratchCodeBuffer.length < BYTES_PER_SCRATCH_CODE) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The provided random byte buffer is too small: %d.",
+                            scratchCodeBuffer.length));
+        }
 
         int scratchCode = 0;
 
@@ -439,7 +444,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException {
         // Checking user input and failing if the secret key was not provided.
-        checkNotNull(secret, "Secret cannot be null.");
+        if (secret == null) {
+            throw new IllegalArgumentException("Secret cannot be null.");
+        }
 
         // Checking if the verification code is between the legal bounds.
         if (verificationCode <= 0 || verificationCode >= this.config.getKeyModulus()) {

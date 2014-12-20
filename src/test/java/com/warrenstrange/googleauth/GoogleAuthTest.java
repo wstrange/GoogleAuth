@@ -38,7 +38,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Not really a unit test, but it shows the basic usage of this package.
@@ -83,9 +83,7 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void rfc6238TestVectors()
-
-    {
+    public void rfc6238TestVectors() {
         // See RFC 6238, p. 14
         final String rfc6238TestKey = "3132333435363738393031323334353637383930";
         final byte[] key = hexStr2Bytes(rfc6238TestKey);
@@ -98,7 +96,7 @@ public class GoogleAuthTest {
         GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
 
         for (int i = 0; i < testTime.length; ++i) {
-            checkArgument(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds) == testResults[i]);
+            assertEquals(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds), testResults[i]);
         }
     }
 
