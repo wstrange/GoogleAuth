@@ -34,8 +34,11 @@ import com.warrenstrange.googleauth.GoogleAuthenticatorConfig.GoogleAuthenticato
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Not really a unit test, but it shows the basic usage of this package.
@@ -65,6 +68,38 @@ public class GoogleAuthTest {
         System.setProperty(
                 CredentialRepositoryMock.MOCK_SECRET_KEY_NAME,
                 SECRET_KEY);
+    }
+
+    private static byte[] hexStr2Bytes(String hex) {
+        // Adding one byte to get the right conversion
+        // Values starting with "0" can be converted
+        byte[] bArray = new BigInteger("10" + hex, 16).toByteArray();
+
+        // Copy all the REAL bytes, not the "first"
+        byte[] ret = new byte[bArray.length - 1];
+        for (int i = 0; i < ret.length; i++)
+            ret[i] = bArray[i + 1];
+        return ret;
+    }
+
+    @Test
+    public void rfc6238TestVectors()
+
+    {
+        // See RFC 6238, p. 14
+        final String rfc6238TestKey = "3132333435363738393031323334353637383930";
+        final byte[] key = hexStr2Bytes(rfc6238TestKey);
+        final long testTime[] = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
+        final long testResults[] = {94287082, 7081804, 14050471, 89005924, 69279037, 65353130};
+        final long timeStepSizeInSeconds = 30;
+
+        GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
+        cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
+        GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
+
+        for (int i = 0; i < testTime.length; ++i) {
+            checkArgument(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds) == testResults[i]);
+        }
     }
 
     @Test

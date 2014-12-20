@@ -167,7 +167,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the validation code for the provided key at the specified instant
      * of time.
      */
-    private int calculateCode(byte[] key, long tm) {
+    int calculateCode(byte[] key, long tm) {
         // Allocating an array of bytes to represent the specified instant
         // of time.
         byte[] data = new byte[8];
