@@ -30,7 +30,8 @@
 
 package com.warrenstrange.googleauth;
 
-import javax.ws.rs.core.UriBuilder;
+import org.apache.http.client.utils.URIBuilder;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
@@ -41,18 +42,12 @@ import java.net.URLEncoder;
  * contained therein.
  */
 public final class GoogleAuthenticatorQRGenerator {
+    
     /**
      * The format string to generate the Google Chart HTTP API call.
      */
     private static final String TOTP_URI_FORMAT =
-            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&"
-                    + "chl=%s";
-    /**
-     * The format string to generate the basic otpauth TOTP URI.
-     *
-     * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
-     */
-    private static final String OTP_AUTH_TOTP_URI_BASE = "otpauth://totp/%s?secret=%s";
+            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=%s";
 
     /**
      * This method wraps the invocation of <code>URLEncoder##encode</code>
@@ -92,34 +87,20 @@ public final class GoogleAuthenticatorQRGenerator {
         if (accountName == null || accountName.trim().length() == 0) {
             throw new IllegalArgumentException("Account name must not be empty.");
         }
-
+        
         StringBuilder sb = new StringBuilder();
-
         if (issuer != null) {
             if (issuer.contains(":")) {
                 throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
             }
 
-            // Using UriBuilder to URI-encode the strings (RFC 3986)
-            sb.append(UriBuilder.fromPath(issuer).build().toString());
+            sb.append(issuer);
             sb.append(":");
         }
 
-        sb.append(UriBuilder.fromPath(accountName).build().toString());
+        sb.append(accountName);
 
         return sb.toString();
-    }
-
-    private static String formatIssuerParameter(String issuer) {
-        if (issuer != null) {
-            if (issuer.contains(":")) {
-                throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
-            }
-
-            return String.format("&issuer=%s", internalURLEncode(issuer));
-        }
-
-        return "";
     }
 
     /**
@@ -149,12 +130,12 @@ public final class GoogleAuthenticatorQRGenerator {
 
         return String.format(
                 TOTP_URI_FORMAT,
-                getOtpAuthTotpURL(issuer, accountName, credentials));
+                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, credentials)));
     }
 
     /**
-     * Returns the basic otpauth TOTP URI. This URI is used to generate a QR barcode to
-     * be loaded into the Google Authenticator application.
+     * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
+     * Use a secure transport since this URI contains the secret.
      * <p/>
      * The current implementation supports the following features:
      * <ul>
@@ -167,17 +148,38 @@ public final class GoogleAuthenticatorQRGenerator {
      *                    (:) character. This parameter can be null.
      * @param accountName The account name. This parameter shall not be null.
      * @param credentials The generated credentials.  This parameter shall not be null.
-     * @return the Google Chart API call URL to generate a QR code containing
-     * the provided information.
+     * @return an otpauth scheme URI for loading into a client application.
      * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
      */
     public static String getOtpAuthTotpURL(String issuer,
                                            String accountName,
                                            GoogleAuthenticatorKey credentials) {
-        return internalURLEncode(
-                String.format(
-                        OTP_AUTH_TOTP_URI_BASE,
-                        formatLabel(issuer, accountName),
-                        credentials.getKey()) + formatIssuerParameter(issuer));
+        
+        URIBuilder uri = new URIBuilder()
+            .setScheme("otpauth")
+            .setHost("totp")
+            .setPath("/" + formatLabel(issuer, accountName))
+            .setParameter("secret", credentials.getKey());
+
+
+        if (issuer != null) {
+            if (issuer.contains(":")) {
+                throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
+            }
+
+            uri.setParameter("issuer", issuer);
+        }
+        
+        /*
+            The following parameters aren't needed since they are all defaults.
+            We can exclude them to make the URI shorter.
+         */
+        // uri.setParameter("algorithm", "SHA1");
+        // uri.setParameter("digits", "6");
+        // uri.setParameter("period", "30");
+        
+        return uri.toString();
+
     }
+    
 }
