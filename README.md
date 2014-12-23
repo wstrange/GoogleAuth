@@ -1,4 +1,4 @@
-![Travis build success](travis-image)
+![Travis build success](https://travis-ci.org/ari/GoogleAuth.svg?branch=master)
 
 README
 ======
@@ -141,4 +141,3 @@ Bug reports can be sent directly to the authors.
 [serviceLoader]: http://docs.oracle.com/javase/6/docs/api/java/util/ServiceLoader.html
 [SecureRandom]: http://docs.oracle.com/javase/8/docs/api/java/security/SecureRandom.html
 [sr-algorithms]: http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#SecureRandom
-[travis-image]: https://travis-ci.org/ari/GoogleAuth.svg?branch=master
