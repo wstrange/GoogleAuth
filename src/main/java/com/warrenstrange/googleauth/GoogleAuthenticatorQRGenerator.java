@@ -149,12 +149,12 @@ public final class GoogleAuthenticatorQRGenerator {
 
         return String.format(
                 TOTP_URI_FORMAT,
-                getOtpAuthTotpURL(issuer, accountName, credentials));
+                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, credentials)));
     }
 
     /**
-     * Returns the basic otpauth TOTP URI. This URI is used to generate a QR barcode to
-     * be loaded into the Google Authenticator application.
+     * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
+     * Use a secure transport since this URI contains the secret.
      * <p/>
      * The current implementation supports the following features:
      * <ul>
@@ -167,17 +167,15 @@ public final class GoogleAuthenticatorQRGenerator {
      *                    (:) character. This parameter can be null.
      * @param accountName The account name. This parameter shall not be null.
      * @param credentials The generated credentials.  This parameter shall not be null.
-     * @return the Google Chart API call URL to generate a QR code containing
-     * the provided information.
+     * @return an otpauth scheme URI for loading into a client application.
      * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
      */
     public static String getOtpAuthTotpURL(String issuer,
                                            String accountName,
                                            GoogleAuthenticatorKey credentials) {
-        return internalURLEncode(
-                String.format(
+        return String.format(
                         OTP_AUTH_TOTP_URI_BASE,
                         formatLabel(issuer, accountName),
-                        credentials.getKey()) + formatIssuerParameter(issuer));
+                        credentials.getKey()) + formatIssuerParameter(issuer);
     }
 }
