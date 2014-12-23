@@ -28,6 +28,9 @@ public class GoogleAuthenticatorQRGeneratorTest extends TestCase {
 		// issuer and user with spaces
 		assertEquals("otpauth://totp/Acme%20Inc:alice%20at%20Inc?secret=secretKey&issuer=Acme+Inc",
 				GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("Acme Inc", "alice at Inc", credentials));
+
+		assertEquals("otpauth://totp/Acme%20&%20%3Cfriends%3E:alice%2523?secret=secretKey&issuer=Acme+%26+%3Cfriends%3E",
+				GoogleAuthenticatorQRGenerator.getOtpAuthTotpURL("Acme & <friends>", "alice%23", credentials));
 	}
 
 }
