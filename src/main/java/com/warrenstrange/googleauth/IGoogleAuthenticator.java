@@ -43,7 +43,6 @@ public interface IGoogleAuthenticator {
      * <li>A list of scratch codes.</li>
      * </ol>
      * <p/>
-     * <p/>
      * The user must register this secret on their device.
      *
      * @return secret key
@@ -58,6 +57,7 @@ public interface IGoogleAuthenticator {
      * <p/>
      * The user must register this secret on their device.
      *
+     * @param userName the user name.
      * @return secret key
      */
     GoogleAuthenticatorKey createCredentials(String userName);
@@ -93,7 +93,7 @@ public interface IGoogleAuthenticator {
      * @param verificationCode The validation code.
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException
+     * @throws GoogleAuthenticatorException if an unexpected error occurs.
      * @see #authorize(String, int)
      */
     boolean authorizeUser(String userName, int verificationCode)
