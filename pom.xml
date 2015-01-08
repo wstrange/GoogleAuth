@@ -37,13 +37,34 @@
     <version>0.4.3</version>
     <packaging>jar</packaging>
 
-    <name>googleauth</name>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>GoogleAuth is a Java server library that implements the
+        Time-based One-time Password (TOTP) algorithm specified in RFC 6238.
+    </description>
     <url>http://maven.apache.org</url>
-
+    <licenses>
+        <license>
+            <name>The BSD 3-Clause License</name>
+            <url>http://opensource.org/licenses/BSD-3-Clause</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Enrico M. Crisostomo</name>
+            <email>enrico.m.crisostomo@gmail.com</email>
+            <organization>Enrico M. Crisostomo</organization>
+            <organizationUrl>http://thegreyblog.blogspot.com</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:wstrange/GoogleAuth.git</connection>
+        <developerConnection>scm:git:git@github.com:wstrange/GoogleAuth.git
+        </developerConnection>
+        <url>git@github.com:wstrange/GoogleAuth.git</url>
+    </scm>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
