@@ -90,7 +90,6 @@ class ReseedingSecureRandom {
 
     private void buildSecureRandom() {
         try {
-            System.out.println("Building secure random instance: " + count.get());
             if (this.algorithm == null && this.provider == null) {
                 this.secureRandom = new SecureRandom();
             } else if (this.provider == null) {
