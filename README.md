@@ -10,61 +10,39 @@ This implementation borrows from [Google Authenticator][gauth], whose C code has
 served as a reference, and was created upon code published in
 [this blog post][tgb] by Enrico M. Crisostomo.
 
-Storing User Credentials
-------------------------
 
-The library does *not* store nor load user credentials directly, and a hook is
-provided to users who want to integrate this functionality.
-The *ICredentialRepository* interface defines the contract between a credential
-repository and this library and a custom implementation can be plugged in and
-used by the library as a user-provided credential repository.
+Who is this for
+---------------
+Any developer creating a Java application which has user logins that could be protected by two factor authentication. That is, rather than just relying on the quality and safety of a password, the application can require a second token be also entered. This token changes every 30 seconds.
 
-The following methods take a user name as a parameter and require a credential
-repository to be available:
+Although there are dedicated token devices available (such as what you get from your bank), it is common that a user will install a token generating application on their desktop or mobile device.
 
-  * `String getSecretKey(String userName)`.
-  * `void saveUserCredentials(String userName, ...)`.
 
-The credentials repository establishes the relationship between a user _name_
-and its credentials.  This way, API methods receiving only a user name instead
-of credentials can be used:
+Installing
+----------
 
-  * `public GoogleAuthenticatorKey createCredentials(String userName)`.
-  * `boolean authorizeUser(String userName, ...)`.
+Add a dependency to your build environment.
 
-If an attempt is made to use such methods when no credential repository is
-configured, a meaningful error is emitted:
+In gradle
 
-    java.lang.UnsupportedOperationException: An instance of the
-    com.warrenstrange.googleauth.ICredentialRepository service must be
-    configured in order to use this feature.
+     compile 'com.warrenstrange:googleauth:0.4.3'
 
-Registering a Credential Repository
------------------------------------
+In maven
 
-The library looks for instances of this interface using the
-[Java ServiceLoader API][serviceLoader] (introduced in Java 6), that is,
-scanning the `META-INF/services` package looking for a file named
-`com.warrenstrange.googleauth.ICredentialRepository` and, if found, loading the
-provider classes listed therein.
+    <dependency>
+      <groupId>com.warrenstrange</groupId>
+      <artifactId>googleauth</artifactId>
+      <version>0.4.3</version>
+    </dependency>
 
-Compile-Time Requirements
--------------------------
-
-To successfully compile this library a Java SE 7 compiler is required and
-sources must be compiled at least at language level 7.0.
-
-Dependencies
--------------------------
-
-This library depends on the following libraries:
+The required libraries will be automatically pulled into your project:
 
   * Apache Commons Codec.
   * Apache HTTP client.
-  * JUnit (test scope).
 
-Since this library is a Maven project, always refer to `pom.xml` for up-to-date
-dependencies and further details.
+
+A minimum of Java 7 is required.
+
 
 Client Applications
 -------------------
@@ -108,32 +86,77 @@ use during the authorisation phase.
     GoogleAuthenticator gAuth = new GoogleAuthenticator();
     final GoogleAuthenticatorKey key = gAuth.createCredentials();
 
-The following code creates a new set of credentials for the user `caller` and
-stores them on the configured `ICredentialRepository` instance:
+The user should be now given the key.getKey() value to load into their token device. A convenience method is provided to easily convert that into a QRcode. That key also needs to be stored within the application data storage.
 
-    GoogleAuthenticator gAuth = new GoogleAuthenticator();
-    final GoogleAuthenticatorKey key = gAuth.createCredentials("caller");
 
-If a credential repository is not configured the code will *fail* throwing an
-`UnsupportedOperationException`.
+When a user wishes to log in, they will provide a token generated from the secret key. This token is typically a 6 digit integer and changes every 30 seconds by default.
 
-The following code checks the validity of the specified `code` against the
+The following code checks the validity of the specified `token` against the
 provided Base32-encoded `secretKey`:
 
     GoogleAuthenticator gAuth = new GoogleAuthenticator();
-    boolean isCodeValid = gAuth.authorize(secretKey, code);
+    boolean isCodeValid = gAuth.authorize(secretKey, token);
+
+It is essential that the system clock is accurate to within a few seconds for this system to work properly. Review NTP server options for the operating system being used.
+
+
+Scratch codes
+-------------
+By default 5 scratch codes are generated which are a bypass mechanism for users who have lost their token generating device. It is up to the developer to store those scratch codes and remove them as they are used.
+
+
+Storing User Credentials
+------------------------
+
+The library can assist with fetching and storing user credentials and a hook is
+provided to users who want to integrate this functionality. The *ICredentialRepository* interface defines the contract between a credential repository and this library.
+
+The library looks for instances of this interface using the
+[Java ServiceLoader API][serviceLoader] (introduced in Java 6), that is,
+scanning the `META-INF/services` package looking for a file named
+`com.warrenstrange.googleauth.ICredentialRepository` and, if found, loading the
+provider classes listed therein.
+
+Two methods needs to be implemented in the *ICredentialRepository* interface.
+
+  * `String getSecretKey(String userName)`.
+  * `void saveUserCredentials(String userName, ...)`.
+
+The credentials repository establishes the relationship between a user _name_
+and its credentials.  This way, API methods receiving only a user name instead
+of credentials can be used. Instead of gAuth.createCredentials() you can use gAuth.createCredentials(username). Instead of 
+
+The following code creates a new set of credentials for the user `Bob` and
+stores them on the configured `ICredentialRepository` instance:
+
+    GoogleAuthenticator gAuth = new GoogleAuthenticator();
+    final GoogleAuthenticatorKey key = gAuth.createCredentials("Bob");
+
 
 The following code checks the validity of the specified `code` against the
-secret key of the user `caller` returned by the configured
+secret key of the user `Bob` returned by the configured
 `ICredentialRepository` instance:
 
     GoogleAuthenticator gAuth = new GoogleAuthenticator();
-    boolean isCodeValid = ga.authorizeUser("caller", code);
+    boolean isCodeValid = ga.authorizeUser("Bob", code);
+
+
+If an attempt is made to use such methods when no credential repository is
+configured, a meaningful error is emitted:
+
+    java.lang.UnsupportedOperationException: An instance of the
+    com.warrenstrange.googleauth.ICredentialRepository service must be
+    configured in order to use this feature.
+
+
+
+
 
 Bug Reports
 -----------
 
-Bug reports can be sent directly to the authors.
+Please open a ticken on [github][githubIssues].
+
 
 [RFC6238]: https://tools.ietf.org/html/rfc6238
 [gauth]: https://code.google.com/p/google-authenticator/
@@ -141,3 +164,4 @@ Bug reports can be sent directly to the authors.
 [serviceLoader]: http://docs.oracle.com/javase/6/docs/api/java/util/ServiceLoader.html
 [SecureRandom]: http://docs.oracle.com/javase/8/docs/api/java/security/SecureRandom.html
 [sr-algorithms]: http://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#SecureRandom
+[githubIssues]: https://github.com/wstrange/GoogleAuth/issues
