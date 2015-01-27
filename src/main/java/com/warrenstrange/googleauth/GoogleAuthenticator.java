@@ -214,13 +214,20 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
             // Returning the validation code to the caller.
             return (int) truncatedHash;
-        } catch (NoSuchAlgorithmException | InvalidKeyException ex) {
+        } catch (NoSuchAlgorithmException ex) {
             // Logging the exception.
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
 
             // We're not disclosing internal error details to our clients.
             throw new GoogleAuthenticatorException("The operation cannot be "
                     + "performed now.");
+        }catch(InvalidKeyException e){
+            // Logging the exception.
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+
+            // We're not disclosing internal error details to our clients.
+            throw new GoogleAuthenticatorException("The operation cannot be "
+                                                   + "performed now.");
         }
     }
 
@@ -325,7 +332,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     }
 
     private List<Integer> calculateScratchCodes(byte[] buffer) {
-        List<Integer> scratchCodes = new ArrayList<>();
+        List<Integer> scratchCodes = new ArrayList<Integer>();
 
         while (scratchCodes.size() < SCRATCH_CODES) {
             byte[] scratchCodeBuffer = Arrays.copyOfRange(

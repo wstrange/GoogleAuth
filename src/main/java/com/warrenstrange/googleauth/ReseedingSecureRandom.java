@@ -44,7 +44,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author Enrico M. Crisostomo
  */
 class ReseedingSecureRandom {
-    private static final int MAX_OPERATIONS = 1_000_000;
+    private static final int MAX_OPERATIONS = 1000000;
     private final String provider;
     private final String algorithm;
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();

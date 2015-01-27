@@ -85,7 +85,7 @@ public final class GoogleAuthenticatorKey {
             List<Integer> scratchCodes) {
         key = secretKey;
         verificationCode = code;
-        this.scratchCodes = new ArrayList<>(scratchCodes);
+        this.scratchCodes = new ArrayList<Integer>(scratchCodes);
     }
 
     /**
