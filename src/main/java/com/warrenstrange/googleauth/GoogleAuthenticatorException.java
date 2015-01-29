@@ -48,8 +48,8 @@ public class GoogleAuthenticatorException extends RuntimeException {
     }
 
     /**
-     * Builds an exception with the provided error mesasge and
-     * the provided cuase.
+     * Builds an exception with the provided error message and
+     * the provided cause.
      *
      * @param message the error message.
      * @param cause   the cause.
