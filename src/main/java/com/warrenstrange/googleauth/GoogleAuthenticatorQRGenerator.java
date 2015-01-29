@@ -154,25 +154,20 @@ public final class GoogleAuthenticatorQRGenerator {
     public static String getOtpAuthTotpURL(String issuer,
                                            String accountName,
                                            GoogleAuthenticatorKey credentials) {
-        try {
-            URIBuilder uri = new URIBuilder()
-                    .setScheme("otpauth")
-                    .setHost("totp")
-                    .setPath("/" + formatLabel(issuer, accountName))
-                    .setParameter("secret", credentials.getKey());
+        
+        URIBuilder uri = new URIBuilder()
+            .setScheme("otpauth")
+            .setHost("totp")
+            .setPath("/" + formatLabel(issuer, accountName))
+            .setParameter("secret", credentials.getKey());
 
 
-            if (issuer != null) {
-                if (issuer.contains(":")) {
-                    throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
-                }
-
-                uri.setParameter("issuer", issuer);
+        if (issuer != null) {
+            if (issuer.contains(":")) {
+                throw new IllegalArgumentException("Issuer cannot contain the \':\' character.");
             }
 
-            return uri.toString();
-        }catch(Exception e){
-            return null;
+            uri.setParameter("issuer", issuer);
         }
         
         /*
@@ -183,7 +178,7 @@ public final class GoogleAuthenticatorQRGenerator {
         // uri.setParameter("digits", "6");
         // uri.setParameter("period", "30");
         
-        
+        return uri.toString();
 
     }
     
