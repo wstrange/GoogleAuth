@@ -1,18 +1,14 @@
 package com.warrenstrange.googleauth;
 
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import java.util.ArrayList;
 
-public class GoogleAuthenticatorQRGeneratorTest extends TestCase {
+import static org.junit.Assert.assertEquals;
 
-	private GoogleAuthenticatorKey credentials;
-	
-	public void setUp() throws Exception {
-		super.setUp();
-		credentials = new GoogleAuthenticatorKey("secretKey", 123456, new ArrayList<Integer>() );
-	}
+public class GoogleAuthenticatorQRGeneratorTest {
+
+	private static GoogleAuthenticatorKey credentials = new GoogleAuthenticatorKey("secretKey", 123456, new ArrayList<Integer>());
 	
 	@Test
 	public void testGetOtpAuthURL() throws Exception {

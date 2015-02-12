@@ -364,8 +364,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         int scratchCode = 0;
 
         for (int i = 0; i < BYTES_PER_SCRATCH_CODE; ++i) {
-            scratchCode <<= 8;
-            scratchCode += scratchCodeBuffer[i];
+            scratchCode = (scratchCode << 8) + (scratchCodeBuffer[i] & 0xff);
         }
 
         scratchCode = (scratchCode & 0x7FFFFFFF) % SCRATCH_CODE_MODULUS;
