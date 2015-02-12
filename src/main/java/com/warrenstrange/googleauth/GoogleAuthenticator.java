@@ -421,23 +421,14 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * @return the secret key.
      */
     private String calculateSecretKey(byte[] secretKey) {
-        byte[] encodedKey;
-
         switch (config.getKeyRepresentation()) {
             case BASE32:
-                Base32 codec = new Base32();
-                encodedKey = codec.encode(secretKey);
-                break;
+                return new Base32().encodeToString(secretKey);
             case BASE64:
-                Base64 codec64 = new Base64();
-                encodedKey = codec64.encode(secretKey);
-                break;
+                return new Base64().encodeToString(secretKey);
             default:
                 throw new IllegalArgumentException("Unknown key representation type.");
         }
-
-        // Creating a string in the specified representation.
-        return new String(encodedKey);
     }
 
     @Override
