@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Enrico Maria Crisostomo
+ * Copyright (c) 2014, 2015, Enrico Maria Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Date: 08/04/14
@@ -47,9 +45,6 @@ class ReseedingSecureRandom {
     private static final int MAX_OPERATIONS = 1_000_000;
     private final String provider;
     private final String algorithm;
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Lock readLock = lock.readLock();
-    private final Lock writeLock = lock.writeLock();
     private final AtomicInteger count = new AtomicInteger(0);
     private SecureRandom secureRandom;
 
@@ -117,32 +112,15 @@ class ReseedingSecureRandom {
     }
 
     void nextBytes(byte[] bytes) {
-        readLock.lock();
-
-        int currentCount = count.incrementAndGet();
-
-        if (currentCount > MAX_OPERATIONS) {
-            readLock.unlock();
-            writeLock.lock();
-
-            try {
-                currentCount = count.get();
-
-                if (currentCount > MAX_OPERATIONS) {
+        if (count.incrementAndGet() > MAX_OPERATIONS) {
+            synchronized (this) {
+                if (count.get() > MAX_OPERATIONS) {
                     buildSecureRandom();
                     count.set(0);
                 }
-
-                readLock.lock();
-            } finally {
-                writeLock.unlock();
             }
         }
 
-        try {
-            this.secureRandom.nextBytes(bytes);
-        } finally {
-            readLock.unlock();
-        }
+        this.secureRandom.nextBytes(bytes);
     }
 }
