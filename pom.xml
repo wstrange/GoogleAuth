@@ -42,12 +42,14 @@
         Time-based One-time Password (TOTP) algorithm specified in RFC 6238.
     </description>
     <url>http://maven.apache.org</url>
+
     <licenses>
         <license>
             <name>The BSD 3-Clause License</name>
             <url>http://opensource.org/licenses/BSD-3-Clause</url>
         </license>
     </licenses>
+
     <developers>
         <developer>
             <name>Enrico M. Crisostomo</name>
@@ -56,21 +58,25 @@
             <organizationUrl>http://thegreyblog.blogspot.com</organizationUrl>
         </developer>
     </developers>
+
     <scm>
         <connection>scm:git:git@github.com:wstrange/GoogleAuth.git</connection>
         <developerConnection>scm:git:git@github.com:wstrange/GoogleAuth.git
         </developerConnection>
         <url>git@github.com:wstrange/GoogleAuth.git</url>
     </scm>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -89,6 +95,7 @@
             <version>4.4</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -100,8 +107,14 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>release</id>
