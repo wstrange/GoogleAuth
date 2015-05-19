@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Enrico Maria Crisostomo
+ * Copyright (c) 2014-2015 Enrico Maria Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,15 @@ import java.util.logging.Logger;
  * Google-provided QR barcode to let an user load the generated information into
  * Google Authenticator.
  * <p/>
- * This class doesn't store in any way either the generated keys nor the keys
+ * The random number generator used by this class uses the default algorithm and provider.
+ * Users can override them by setting the following system properties to the algorithm
+ * and provider name of their choice:
+ * <ul>
+ * <li>{@link #RNG_ALGORITHM}.</li>
+ * <li>{@link #RNG_ALGORITHM_PROVIDER}.</li>
+ * </ul>
+ * <p/>
+ * This class does not store in any way either the generated keys nor the keys
  * passed during the authorization process.
  * <p/>
  * Java Server side class for Google Authenticator's TOTP generator was inspired
@@ -59,19 +67,28 @@ import java.util.logging.Logger;
  *
  * @author Enrico M. Crisostomo
  * @author Warren Strange
- * @version 1.0
+ * @version 0.4.5
  * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
  * @see <a href="http://code.google.com/p/google-authenticator" />
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
- * @since 1.0
+ * @since 0.3.0
  */
 public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
+     * The system property to specify the random number generator algorithm to use.
+     */
+    public static final String RNG_ALGORITHM = "com.warrenstrange.googleauth.rng.algorithm";
+
+    /**
+     * The system property to specify the random number generator provider to use.
+     */
+    public static final String RNG_ALGORITHM_PROVIDER = "com.warrenstrange.googleauth.rng.algorithmProvider";
+
+    /**
      * The logger for this class.
      */
-    private static final Logger LOGGER =
-            Logger.getLogger(GoogleAuthenticator.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GoogleAuthenticator.class.getName());
 
     /**
      * The number of bits of a secret key in binary form. Since the Base32
@@ -108,18 +125,17 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     private static final int BYTES_PER_SCRATCH_CODE = 4;
 
     /**
-     * The SecureRandom algorithm to use.
+     * The default SecureRandom algorithm to use if none is specified.
      *
      * @see java.security.SecureRandom#getInstance(String)
      */
     @SuppressWarnings("SpellCheckingInspection")
-
-    private static final String RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
+    private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
 
     /**
-     * Sun random number algorithm provider name.
+     * The default random number algorithm provider to use if none is specified.
      */
-    private static final String RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
+    private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
     /**
      * Cryptographic hash function used to calculate the HMAC (Hash-based
@@ -134,16 +150,16 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
     private final GoogleAuthenticatorConfig config;
 
     /**
-     * The internal SecureRandom instance used by this class. Since as of Java 7
-     * Random instances are required to be thread-safe, no synchronisation is
-     * required in the methods of this class using this instance. Thread-safety
+     * The internal SecureRandom instance used by this class.  Since Java 7
+     * {@link Random} instances are required to be thread-safe, no synchronisation is
+     * required in the methods of this class using this instance.  Thread-safety
      * of this class was a de-facto standard in previous versions of Java so
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
     private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
-            RANDOM_NUMBER_ALGORITHM,
-            RANDOM_NUMBER_ALGORITHM_PROVIDER);
+            getRandomNumberAlgorithm(),
+            getRandomNumberAlgorithmProvider());
 
     public GoogleAuthenticator() {
         config = new GoogleAuthenticatorConfig();
@@ -155,6 +171,18 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         }
 
         this.config = config;
+    }
+
+    private String getRandomNumberAlgorithm() {
+        return System.getProperty(
+                RNG_ALGORITHM,
+                DEFAULT_RANDOM_NUMBER_ALGORITHM);
+    }
+
+    private String getRandomNumberAlgorithmProvider() {
+        return System.getProperty(
+                RNG_ALGORITHM_PROVIDER,
+                DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
     }
 
     /**
