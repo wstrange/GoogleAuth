@@ -149,15 +149,10 @@ configured, a meaningful error is emitted:
     com.warrenstrange.googleauth.ICredentialRepository service must be
     configured in order to use this feature.
 
-
-
-
-
 Bug Reports
 -----------
 
-Please open a ticken on [github][githubIssues].
-
+Please open a ticket on [github][githubIssues].
 
 [RFC6238]: https://tools.ietf.org/html/rfc6238
 [gauth]: https://code.google.com/p/google-authenticator/
