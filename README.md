@@ -12,12 +12,15 @@ served as a reference, and was created upon code published in
 [this blog post][tgb] by Enrico M. Crisostomo.
 
 
-Who is this for
----------------
-Any developer creating a Java application which has user logins that could be protected by two factor authentication. That is, rather than just relying on the quality and safety of a password, the application can require a second token be also entered. This token changes every 30 seconds.
+Whom Is This Library For
+------------------------
 
-Although there are dedicated token devices available (such as what you get from your bank), it is common that a user will install a token generating application on their desktop or mobile device.
+Any developer creating a Java application which has user logins that could be protected by two factor authentication.
+That is, rather than just relying on the quality and the safety of a password, the application can require a second token be also entered.
+This token changes every 30 seconds.
 
+Although there are dedicated token devices available (such as what you get from your bank),
+a user may install a token generating application on their desktop or mobile device.
 
 Installing
 ----------
