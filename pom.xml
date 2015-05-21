@@ -1,12 +1,12 @@
 <!--
-  ~ Copyright (c) 2014, 2015, Enrico Maria Crisostomo
+  ~ Copyright (c) 2014-2015 Enrico M. Crisostomo
   ~ All rights reserved.
   ~
   ~ Redistribution and use in source and binary forms, with or without
   ~ modification, are permitted provided that the following conditions are met:
   ~
-  ~   * Redistributions of source code must retain the above copyright notice,
-  ~     this list of conditions and the following disclaimer.
+  ~   * Redistributions of source code must retain the above copyright notice, this
+  ~     list of conditions and the following disclaimer.
   ~
   ~   * Redistributions in binary form must reproduce the above copyright notice,
   ~     this list of conditions and the following disclaimer in the documentation
@@ -27,6 +27,7 @@
   ~ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   ~ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -34,20 +35,23 @@
 
     <groupId>com.warrenstrange</groupId>
     <artifactId>googleauth</artifactId>
-    <version>0.4.5</version>
+    <version>0.5.0</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>GoogleAuth is a Java server library that implements the
-        Time-based One-time Password (TOTP) algorithm specified in RFC 6238.
+    <description>
+        GoogleAuth is a Java server library that implements the Time-based One-time Password (TOTP) algorithm specified
+        in RFC 6238.
     </description>
     <url>http://maven.apache.org</url>
+
     <licenses>
         <license>
             <name>The BSD 3-Clause License</name>
             <url>http://opensource.org/licenses/BSD-3-Clause</url>
         </license>
     </licenses>
+
     <developers>
         <developer>
             <name>Enrico M. Crisostomo</name>
@@ -56,21 +60,25 @@
             <organizationUrl>http://thegreyblog.blogspot.com</organizationUrl>
         </developer>
     </developers>
+
     <scm>
         <connection>scm:git:git@github.com:wstrange/GoogleAuth.git</connection>
         <developerConnection>scm:git:git@github.com:wstrange/GoogleAuth.git
         </developerConnection>
         <url>git@github.com:wstrange/GoogleAuth.git</url>
     </scm>
+
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -86,9 +94,10 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.4</version>
+            <version>4.4.1</version>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
@@ -100,13 +109,41 @@
                     <target>1.7</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
         </plugins>
     </build>
+
     <profiles>
         <profile>
             <id>release</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>1.4</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-no-snapshots</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireReleaseDeps>
+                                            <message>No Snapshots dependencies are allowed in a release build.</message>
+                                            <onlyWhenRelease>true</onlyWhenRelease>
+                                        </requireReleaseDeps>
+                                    </rules>
+                                    <fail>true</fail>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>

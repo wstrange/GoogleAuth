@@ -20,15 +20,15 @@
 This manual is for the Java @acronym{TOTP} server library (version
 @value{VERSION}, @value{UPDATED}).
 
-Copyright @copyright{} 2013, 2014, Enrico M. Crisostomo
+Copyright @copyright{} 2013-2015 Enrico M. Crisostomo
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
 any later version published by the Free Software Foundation; with no
 Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
-Texts.  A copy of the license is included in the section entitled ``GNU
-Free Documentation License''.
+Texts.  A copy of the license is included in the section entitled `GNU
+Free Documentation License'.
 @end quotation
 @end copying
 
@@ -77,17 +77,15 @@ is a an extension of the @acronym{HMAC}-based One-Time Password algorithm
 (@acronym{HOTP}) (@acronym{RFC} 4226) which is the basis of many two-phase
 authentication solutions such as Google's, Microsoft's and others.
 
-The @emph{Google Authenticator} client application is probably the most widely used
-software @acronym{TOTP} token generator, and is available as a free application on all
-the mainstream mobile operating systems.
-On some system it is probably the de-facto standard @acronym{TOTP} password generator
-and it is used to manage not only Google's, but other accounts' passwords as well.
-Google Authenticator is a flexible, easy to use, easy to configure, zero-cost
-client that can be leveraged by other systems, provided they have a back-end
-that implements the server-side part of the required functionality to implement
-a @acronym{TOTP}-based authentication system.
-
-This Java library provides the building blocks of such a back-end:
+The @emph{Google Authenticator} client application is probably the most widely
+used software-based @acronym{TOTP} token generator, and is available as a free
+application on all the mainstream mobile operating systems.  It is probably the
+de-facto standard @acronym{TOTP} password generator and it is used to manage not
+only Google's, but other accounts' passwords as well.  Google Authenticator is a
+flexible, easy to use, easy to configure, free application that can be leveraged
+by any system, provided it has a back-end that implements the functionality to
+validate a @acronym{TOTP} password.  This Java library provides the building
+blocks of such a back-end:
 
 @itemize
 @item
@@ -99,121 +97,115 @@ Credential verification.
 @item
 @acronym{QR} code generation@footnote{The @acronym{QR} code can be obtained
 using a generated @acronym{URL}, which relies on the Google Chart @acronym{HTTP}
-@acronym{API} to create a compliant @acronym{QR} code encoding the necessary information.}
-for the easy configuration@footnote{Google Authenticator can use the built-in
-camera of a cellular phone to take a picture of a @acronym{QR} code and
-configure a new account using the information contained therein.}
-of Google Authenticator.
+@acronym{API} to create a compliant @acronym{QR} code encoding the necessary
+information.}  for the easy configuration@footnote{Google Authenticator can use
+the built-in camera of a cellular phone to take a picture of a @acronym{QR} code
+and configure a new account using the information contained therein.}  of an
+account in the Google Authenticator application.
 @end itemize
 
 @section Design Philosophy
 This library has been designed with @emph{simplicity} in mind, trying to follow
-the @acronym{KISS} principle.
-This basically means that the library @emph{does one thing}, and it strives hard
-@emph{to do it well}: @acronym{TOTP} authentication.
-No more, no less.
+the @acronym{KISS} principle.  This basically means that the library @emph{does
+one thing}, and it strives hard @emph{to do it well}: @acronym{TOTP}
+authentication.  No more, no less.
 
 There exist more complex and comprehensive solutions, and if you need something
 more than being able to perform @acronym{TOTP} authentication, chances are you
 should assess whether you should use this library or some other product.
 
 On the other hand, if what you are looking @emph{is} performing @acronym{TOTP}
-authentication, then this library will provide an easy to use @acronym{API}
-and a @emph{very} compact library: currently, the size of the library @acronym{JAR}
-archive is smaller than 20 @acronym{KB}.
-Most importantly, this library has almost@footnote{This library's dependencies are
-compact as well and do not pull-in a chain of dependencies themselves.}
-no dependencies:
+authentication, then this library will provide an easy to use @acronym{API} and
+a @emph{very} compact library: currently, the size of the library @acronym{JAR}
+archive is smaller than 20 @acronym{KB}.  Most importantly, this library has
+very few@footnote{This library's dependencies are compact as well and do not
+pull-in a chain of dependencies themselves.}  dependencies:
 
 @itemize
 @item
-The @emph{Apache Commons Codec} library, which is a required runtime dependency.
+The @emph{Apache Commons Codec} library.
 
 @item
-The @acronym{JAX-RS} @acronym{API} v. 2 and an implementation, if the
-@acronym{QR} code generation function is used.
+The @emph{Apache @acronym{HTTP} components} library.
 
 @end itemize
 
-The library contains pure Java @acronym{SE} code and the back-end components
-are implemented as @acronym{POJO}s (using current Java jargon).
-Therefore, it can be included and used in any Java application and does not have
-dependencies with any framework or technology other than a Java @acronym{SE} 7
-runtime environment.
+The library contains Java @acronym{SE} code and the back-end components are
+implemented as @acronym{POJO}s (using current Java jargon).  Therefore, it can
+be included and used in any Java application and does not have dependencies with
+any framework or technology@footnote{Earlier versions of this library had a
+dependency with @acronym{JAX-RS} v. 2 that was removed in v. 0.4.5.}  other than
+a Java @acronym{SE} 7 runtime environment.
 
 @node Overview
 @chapter Overview
 The @acronym{TOTP} algorithm (specified by @acronym{RFC} 6238) is an extension
 of the @acronym{HOTP} algorithm that uses a time-based moving factor instead of
-an event counter.
-One of the purposes of that work is, in the words of the authors:
+an event counter.  One of the purposes of that work is, in the words of the
+authors:
 
 @quotation
    The proposed algorithm can be used across a wide range of network
    applications, from remote Virtual Private Network (@acronym{VPN}) access and
-   Wi-Fi network logon to transaction-oriented Web applications.  The
-   authors believe that a common and shared algorithm will facilitate
-   adoption of two-factor authentication on the Internet by enabling
-   interoperability across commercial and open-source implementations.
+   Wi-Fi network logon to transaction-oriented Web applications.  The authors
+   believe that a common and shared algorithm will facilitate adoption of
+   two-factor authentication on the Internet by enabling interoperability across
+   commercial and open-source implementations.
 @author @acronym{RFC} 6238
 @end quotation
 
 In fact, as expected by the authors, both two-factor authentication and
-@acronym{TOTP} are being widely adopted.
-Google enabled @acronym{TOTP}-based two-factor authentication for its users
-and developed a software @acronym{TOTP} token generator,
-@emph{Google Authenticator}, running on all the mainstream smartphone operating
-systems, which is now the de-facto standard token generator for
-non-corporate use.
+@acronym{TOTP} are being widely adopted.  Google enabled @acronym{TOTP}-based
+two-factor authentication for its users and developed a software @acronym{TOTP}
+token generator, @emph{Google Authenticator}, running on all the mainstream
+smartphone operating systems, which is now the de-facto standard token generator
+(at least for non-corporate use).
 
 @acronym{TOTP}-based two-factor authentication schemes usually require the user
-to send its @acronym{TOTP} password alongside its credentials.
-The @acronym{TOTP} password is time-based, it is calculated with a cryptographic
+to send its @acronym{TOTP} password alongside its credentials.  The
+@acronym{TOTP} password is time-based, it is calculated with a cryptographic
 algorithm and its validity is very short: @acronym{RFC} 6238 recommends to used
-a time-step size of 30 seconds.
-The very short expiration time of each password is a key security factor against
-attacks.
+a time-step size of 30 seconds.  The very short expiration time of each password
+is a key security factor against attacks.
 
-The security analysis (@acronym{RFC} 4226) of this algorithm concludes that
-the best attack against the @acronym{HOTP} function is the @emph{brute force}
-attack.
-The security of the algorithm can be approximate (@acronym{RFC} 4226) as
+The security analysis (@acronym{RFC} 4226) of this algorithm concludes that the
+best attack against the @acronym{HOTP} function is the @emph{brute force}
+attack.  The security of the algorithm can be approximate (@acronym{RFC} 4226)
+as
 @tex
 $$ {\rm Security} = {s \cdot v \over 10^d} $$
 @end tex
 @noindent
-where @math{s} is the @emph{look-ahead synchronization window size}@footnote{Referred to
-simply as @emph{window size} in the rest of this manual.}, @math{v}
-is the number of @emph{verification attempts} and @math{d} is the number of
-@emph{digits} in the @acronym{TOTP} password. 
-That is: if a brute force attack with @math{v} verification attempts is used,
-then its probability of success is
+where @math{s} is the @emph{look-ahead synchronization window
+size}@footnote{Referred to simply as @emph{window size} in the rest of this
+manual.}, @math{v} is the number of @emph{verification attempts} and @math{d} is
+the number of @emph{digits} in the @acronym{TOTP} password.  That is: if a brute
+force attack with @math{v} verification attempts is used, then its probability
+of success is
 @tex
 $$ p = {s \cdot v \over 10^d} $$
 @end tex
 
 @acronym{RFC} 4226 recommends that @math{d \geq 6}, and this library validates
-6-digit @acronym{TOTP} passwords, which is the password length currently used
-by Google Authenticator.
-Passwords of up to 9 decimal digits could be used, which is the maximum
-that can be represented by the 31-bit string returned by the
+6-digit @acronym{TOTP} passwords, which is the password length currently used by
+Google Authenticator.  Passwords of up to 9 decimal digits could be used, which
+is the maximum that can be represented by the 31-bit string returned by the
 @emph{dynamic truncation} function.
 
-Evaluating the probability @math{p} of making a successful attack with @math{s = 10}
-and @math{d = 6} yields
+Evaluating the probability @math{p} of making a successful attack with @math{s =
+10} and @math{d = 6} yields
 @tex
 $$ p = { v \over 10^5 } $$
 @end tex
-that is, @math{v} successes every 10.000 attempts.
-By limiting the number of unsuccessful authentication attempts a user can perform,
-a superior bound on @math{p} can be established that satisfies the security requirements.
+that is, @math{v} successes every 10.000 attempts.  By limiting the number of
+unsuccessful authentication attempts a user can perform, a superior bound on
+@math{p} can be established that satisfies the security requirements.
 
 @node API Description
 @chapter @acronym{API} Description
-The @acronym{TOTP} algorithm is used to determine whether the password
-provided by the @emph{prover}@footnote{The user providing the password generated
-by his token.}
-is proved as authentic by the @emph{verifier}, given the prover's
+The @acronym{TOTP} algorithm is used to determine whether the password provided
+by the @emph{prover}@footnote{The user providing the password generated by his
+token.}  is proved as authentic by the @emph{verifier}, given the prover's
 @emph{shared secret} and current Unix time.
 
 The two basic operations that this library implements are:
@@ -228,19 +220,16 @@ Credential @emph{authentication}.
 @end itemize
 
 Credential creation is the process in which the server generates the
-@emph{shared secret} and shares it with the client.
-The shared secret is generated using a cryptographically strong
-pseudorandom generator and has to be communicated to the client, so that he can
-store it and configure its token.
-A common way to communicate this information is encoded into a @acronym{QR}
-code: this form of transmission makes it difficult to eavesdrop since it is
-need only be photographed by Google Authenticator, and then it can immediately
-be discarded.
-To strengthen the custody of the shared secret further, @acronym{TOTP} token
-generators (both software and hardware) do not generally let users retrieve it
-after an account has been configured.
-This way, only individuals in physical possession of a token can use the shared
-secret to generate @acronym{TOTP} passwords.
+@emph{shared secret} and shares it with the client.  The shared secret is
+generated using a cryptographically strong pseudorandom generator and has to be
+communicated to the client, so that he can store it and configure its token.  A
+common way to communicate this information is sending it to the client encoded
+into a @acronym{QR} code.  The user only needs to scan the @acronym{QR} code
+with the Google Authenticator application and then discard it immediately.  For
+the sake of security, @acronym{TOTP} token generators do not generally let users
+retrieve the shared secrets after an account has been configured.  This way,
+only individuals in physical possession of a token can use the shared secret to
+generate @acronym{TOTP} passwords.
 
 Credential authentication is the process in which the server applies the
 @acronym{TOTP} algorithm to the shared secret and the token-generated password
@@ -251,7 +240,8 @@ classes:
 
 @table @command
 @item IGoogleAuthenticator
-This is the main @acronym{API} interface and it publishes the library entry points. 
+This is the main @acronym{API} interface and it publishes the library entry
+points.
 
 @item GoogleAuthenticatorKey
 This class is the credentials container, mainly used when returning
@@ -262,12 +252,59 @@ This helper class provides @acronym{QR} code generation using the Google Chart
 @acronym{HTTP} @acronym{API}.
 
 @item ICredentialRepository
-This interface can optionally be implemented by callers to provide
-callback functions to the library used to interact with a ``credential
-repository'', where newly-generated credentials are @emph{stored} and
-keys are @emph{retrieved} when a password must be validated.
+This interface can optionally be implemented by callers to provide callback
+functions to the library used to interact with a `credential repository', where
+newly-generated credentials are @emph{stored} and keys are @emph{retrieved} when
+a password must be validated.
 
 @end table
+
+@section Random Number Generator Algorithm and Provider
+The creation of a shared secret is an important process because the ability of
+taking over or guessing somebody else's secret could result in account
+hijacking.  For this reason, and since it is not always practicable or desirable
+to devise such a creation strategy, this library offers the possibility of
+creating shared secrets using data coming from a cryptographically strong
+pseudorandom generator (@acronym{PRNG}).  The default provider (@command{SUN})
+and the default algorithm (@command{SHA1PRNG}) used by this library are
+available on Oracle Java runtime environments and they were not tested on other
+implementations where they are likely to be missing.
+
+Users can configure the library to use an alternate provider and algorithm by
+providing their names as values of the following system properties:
+
+@table @command
+@item com.warrenstrange.googleauth.rng.algorithm
+If a property with this name is set, the specified random number generator
+algorithm is used.
+
+@item com.warrenstrange.googleauth.rng.algorithmProvider
+If a property with this name is set, the specified random number generator
+algorithm provider is used.  The provider can be overridden if and only if the
+algorithm is overridden as well.
+
+@end table
+
+While explicitly specifying a provider and an algorithm may impair
+interoperability, on the other hand it guarantees the expected level of
+randomness and a predictable behaviour.  The performance problems often reported
+when using a blocking entropy gathering device (@pxref{NativePRNG}) are an
+example of why the authors chose the current defaults.
+
+@subsection @command{NativePRNG}
+@anchor{NativePRNG}
+On some environments the @command{NativePRNG} algorithm may be used by default.
+This algorithm uses the @file{/dev/random} device to get random data and this
+device is @emph{blocking} on certain platforms (such as Linux).  If the blocking
+behaviour is undesirable and @file{/dev/urandom} can be used as a valid
+alternative entropy gathering device, then the @command{NativePRNG} algorithm
+can be configured to get random data from @file{/dev/urandom} by setting the
+system property @env{java.security.egd} to @file{/dev/urandom}, for example
+passing the following argument to the Java virtual machine:
+
+@example
+-Djava.security.egd=file:/dev/urandom
+@end example
 
 @section @command{ICredentialRepository}-Related Methods
 The @command{IGoogleAuthenticator} interface originally provided the following
@@ -281,43 +318,33 @@ Create new credentials.
 Validate the specified @command{verificationCode} with the specified
 @command{secret} using the @acronym{TOTP} algorithm.
 
-@end table 
+@end table
 
-When support for the @command{ICredentialRepository} callbacks was designed,
-a new set of methods were added to allow the user to specify a
-@command{@var{userName}} to be used to save or retrieve his key.
-Such methods are the following:
+When support for the @command{ICredentialRepository} callbacks was designed, a
+new set of methods were added to allow the user to specify a
+@command{@var{userName}} to be used to save or retrieve his key.  Such methods
+are the following:
 
 @table @command
 @item createCredentials(String userName)
 Create new credentials.
 
 @item authorizeUser(String userName, int verificationCode)
-Validate the specified @command{verificationCode} with the secret of the
-user with the specified @command{userName} using the @acronym{TOTP} algorithm.
+Validate the specified @command{verificationCode} with the secret of the user
+with the specified @command{userName} using the @acronym{TOTP} algorithm.
 @end table
 
 @noindent
 Their functionality is identical to that of the aforementioned methods, but in
-this case no @command{@var{secret}} is returned or passed as a parameter, but
-is saved or retrieved from the configured @command{ICredentialRepository}
-instance instead.
+this case no @command{@var{secret}} is returned or passed as a parameter, but is
+saved or retrieved from the configured @command{ICredentialRepository} instance
+instead.
 
 In the following sections the first generation methods will be used for tutorial
 purposes, but any of those @acronym{API} calls could be substituted by the
 corresponding @command{ICredentialRepository}-enabled call.
 
 @section Credential Creation
-The creation of a shared secret is an important process because the ability of
-taking over or guessing somebody else's secret could result in account hijacking.
-
-For this reason, and since it is not always practicable or desirable to devise
-such a creation strategy, this library offers the possibility of creating shared
-secrets using a cryptographically strong pseudorandom generator
-(@acronym{PRNG}), appropriately seeded (and reseeded).
-The chosen provider (currently not customizable) is available on Oracle Java
-environments and it was not tested in other implementations.
-
 A new set of credentials can be created using the @command{createCredentials}
 method:
 
@@ -331,8 +358,8 @@ This method computes a new random shared secret wrapped into a
 
 @subsection Credentials
 The @command{GoogleAuthenticatorKey} class represents newly generated
-credentials, as returned by @command{createCredentials}.
-Instances of this class contains the following data members:
+credentials, as returned by @command{createCredentials}.  Instances of this
+class contains the following data members:
 
 @itemize
 @item
@@ -341,43 +368,39 @@ The shared secret @command{key}.
 @item
 The @emph{verification code}@footnote{The verification code is the
 @acronym{TOTP} password calculated at @math{t = u}, where @math{u} is the Unix
-Epoch.} @command{verificationCode}.
-The verification code is an optional feature which is not used by some clients
-such as Google Authenticator.
+Epoch.} @command{verificationCode}.  The verification code is an optional
+feature which is not used by some clients such as Google Authenticator.
 
 @item
-A list of @emph{scratch codes} @command{scratchCodes}.
-Scratch codes are randomly generated data@footnote{Generated together with the
-shared secret using the same, cryptographically strong pseudorandom generator.}
-that are optionally used as ``recovery passwords'' in case the token generator
-is not available.
-If this feature is implemented, scratch codes should be usable only @emph{once}.
+A list of @emph{scratch codes} @command{scratchCodes}.  Scratch codes are
+randomly generated data@footnote{Generated together with the shared secret using
+the same, cryptographically strong pseudorandom generator.}  that are optionally
+used as `recovery passwords' in case the token generator is not available.  If
+this feature is implemented, scratch codes should be usable only @emph{once}.
 This library provides scratch codes as an ancillary feature, to offer the client
-randomly generated data with the same guarantees the shared secret offers.
-How scratch codes are used, however, is a responsibility of the prover and this
+randomly generated data with the same guarantees the shared secret offers.  How
+scratch codes are used, however, is a responsibility of the prover and this
 library offers no facility to store them or validate them.
 @end itemize
 
 @section Generating a @acronym{QR} Code
-@anchor{Generating a @acronym{QR} Code}
-The Google Authenticator application can be quickly configured using a
-@acronym{QR} code: the application requests the user to take a photograph
-of the code and the application uses the data encoded therein to configure
-a new account.
+@anchor{Generating a @acronym{QR} Code} The Google Authenticator application can
+be quickly configured using a @acronym{QR} code: the application requests the
+user to take a photograph of the code and the application uses the data encoded
+therein to configure a new account.
 
-This approach has several advantages: human errors are reduced to a minimum,
-or eliminated altogether, the setup process is easy and quick, but most
-importantly, the shared secret is @emph{never} shown in plain text.
-Unless a malicious user succeeds in stealing a usable picture of the
-@acronym{QR} code to configure another Google Authenticator instance with the
-stolen credentials, the shared secret cannot be read, not even by the legitimate
-owner himself.
-Therefore, @acronym{QR} code greatly reduce the risk of credentials being intercepted
-during the delicate phase of the initial interchange.
+This approach has several advantages: human errors are reduced to a minimum, or
+eliminated altogether, the setup process is easy and quick, but most
+importantly, the shared secret is @emph{never} shown in plain text.  Unless a
+malicious user succeeds in stealing a usable picture of the @acronym{QR} code to
+configure another Google Authenticator instance with the stolen credentials, the
+shared secret cannot be read, not even by the legitimate owner himself.
+Therefore, @acronym{QR} code greatly reduce the risk of credentials being
+intercepted during the delicate phase of the initial interchange.
 
 This library supports this use case providing a ready-to-use Google Chart
-@acronym{HTTP} @acronym{API} call to display a @acronym{QR} code encoding
-all the data of the newly generated credentials:
+@acronym{HTTP} @acronym{API} call to display a @acronym{QR} code encoding all
+the data of the newly generated credentials:
 
 @itemize
 @item The @emph{issuer}.
@@ -409,33 +432,31 @@ final String otpAuthURL =
     "Test Org.",
     "test@@test.org",
     key);
-
-@end example 
+@end example
 
 @noindent
-The @command{GoogleAuthenticatorQRGenerator.getOtpAuthURL} method will return
-a Google Chart @acronym{API} @acronym{URL} which can then be used to generate
-the @acronym{QR} code image.
-An example @acronym{URL} that generates a valid @acronym{QR} code encoding
-Google Authenticator's configuration settings is the following@footnote{Lines
-are splitted with @kbd{\} and intented for better readability and separation of
-the query string parameters..}:
+The @command{GoogleAuthenticatorQRGenerator.getOtpAuthURL} method will return a
+Google Chart @acronym{API} @acronym{URL} which can then be used to generate the
+@acronym{QR} code image.  An example @acronym{URL} that generates a valid
+@acronym{QR} code encoding Google Authenticator's configuration settings is the
+following@footnote{Lines are splitted with @kbd{\} and intented for better
+readability and separation of the query string parameters..}:
 
 @smallexample
 https://chart.googleapis.com/chart? \
-  chs=200x200&
-  chld=M%7C0&
-  cht=qr&
+  chs=200x200&                      \
+  chld=M%7C0&                       \
+  cht=qr&                           \
   chl=otpauth%3A%2F%2Ftotp%2FTest%2520Issuer%3Atest%40issuer.org%3F \
       secret%3D7GYQCQ2KA34VADUR%26issuer%3DTest%2BIssuer
 @end smallexample
 
 @noindent
-The first query parameters are ``technical'' and are passed to the Google Chart
-@acronym{API} to configure the chart to generate.
-The @command{chl} parameter carries the data to be encoded, which must be
-@acronym{UTF-8} @acronym{URL}-encoded@footnote{The encoding of all the
-@acronym{URL} fragments is performed by the library.}.
+The first query parameters are `technical' and are passed to the Google Chart
+@acronym{API} to configure the chart to generate.  The @command{chl} parameter
+carries the data to be encoded, which must be @acronym{UTF-8}
+@acronym{URL}-encoded@footnote{The encoding of all the @acronym{URL} fragments
+is performed by the library.}.
 
 @subsection The @command{otpauth} Scheme
 Google Authenticator expects an @acronym{URI} conforming to the
@@ -447,8 +468,7 @@ otpauth://@var{type}/@var{label}?@var{parameters}
 
 @noindent
 This @acronym{URI} is generated by the library using the information passed to
-the @acronym{API} methods.
-The most important pieces of information are:
+the @acronym{API} methods.  The most important pieces of information are:
 
 @itemize
 @item
@@ -462,19 +482,17 @@ label = accountname / issuer (":" / "%3A") *"%20" accountname
 @end smallexample
 
 @item
-The @command{@var{parameters}}.
-The library automatically adds the two required parameters @command{issuer}
-and @command{secret}.
-The secret is the shared secret, encoded in Base32 (@acronym{RFC}
-5348).
+The @command{@var{parameters}}.  The library automatically adds the two required
+parameters @command{issuer} and @command{secret}.  The secret is the shared
+secret, encoded in Base32 (@acronym{RFC} 5348).
 @end itemize
 
 @subsubsection The Issuer
 The issuer identifies the service provider associated with the account being
-created, and it must be @acronym{URL}-encoded.
-The issuer information is @emph{optional} and is present in both the label and
-the query parameters of an @command{optauth} @acronym{URI}.
-Although optional, it is @emph{strongly recommended} to include it.
+created, and it must be @acronym{URL}-encoded.  The issuer information is
+@emph{optional} and is present in both the label and the query parameters of an
+@command{optauth} @acronym{URI}.  Although optional, it is @emph{strongly
+recommended} to include it.
 
 @subsection The @acronym{QR} Code
 The Google Chart @acronym{API} currently generates the @acronym{QR} code as an
@@ -488,12 +506,12 @@ image in @acronym{PNG} format (@pxref{qr}).
 Since one of the reasons why @acronym{QR} codes are used in the first place is
 making it more difficult to a man in the middle to steal a newly-generated
 identity, and since it encodes the shared secret, implementors should make sure
-the @acronym{QR} code is treated as securely as any other kind of credential. 
+the @acronym{QR} code is treated as securely as any other kind of credential.
 
 @section Validating a Password
-A @acronym{TOTP} password is validated using one of the different @command{authorize*}
-methods provided by the library.
-To validate a password, the @acronym{TOTP} algorithm requires:
+A @acronym{TOTP} password is validated using one of the different
+@command{authorize*} methods provided by the library.  To validate a password,
+the @acronym{TOTP} algorithm requires:
 
 @itemize
 @item
@@ -509,12 +527,11 @@ The time-based moving factor.
 @end itemize
 
 The client and the server should agree on how to calculate the time-based moving
-factor.
-@acronym{RFC 6238} @emph{recommends} using a default time-step size of 30
-seconds and this library adheres to that recommendation.
-The library @acronym{API} allows callers to specify the number of time-step
-windows that should be checked during the validation process, but does not
-currently allows the time-step size to be overridden.
+factor.  @acronym{RFC 6238} @emph{recommends} using a default time-step size of
+30 seconds and this library adheres to that recommendation.  The library
+@acronym{API} allows callers to specify the number of time-step windows that
+should be checked during the validation process, but does not currently allows
+the time-step size to be overridden.
 
 To authorize a @acronym{TOTP} password, one of the following methods shall be
 used:
@@ -557,9 +574,9 @@ Helper class providing @acronym{QR} code generation using the Google Chart
 
 @item ICredentialRepository
 This interface can optionally be implemented by callers to provide callback
-functions to the library used to interact with a ``credential repository'',
-where newly-generated credentials are @emph{stored} and keys are
-@emph{retrieved} when a password must be validated.
+functions to the library used to interact with a `credential repository', where
+newly-generated credentials are @emph{stored} and keys are @emph{retrieved} when
+a password must be validated.
 
 @item IGoogleAuthenticator
 This is the main @emph{API} interface and it publishes the library entry points.
@@ -572,17 +589,20 @@ An enumeration of all the available secret key representations, currently:
 @item @code{BASE64}
 @end itemize
 
+@item ReseedingSecureRandom
+A wrapper class around @command{SecureRandom} that takes care of reseeding the
+wrapper instance every certain number of operations.  Currently, this parameter
+is not overridable.
+
 @end table
 
 @section @command{GoogleAuthenticator}
 The @command{GoogleAuthenticator} class is the provided implementation of the
-@command{IGoogleAuthenticator} interface.
-This class adds no public methods to those defined in its primary
-interface.
+@command{IGoogleAuthenticator} interface.  This class adds no public methods to
+those defined in its primary interface.
 
 This implementation conforms to the recommendations and the default parameter
-values specified in @acronym{RFC 6238}.
-Specifically, this class uses:
+values specified in @acronym{RFC 6238}.  Specifically, this class uses:
 
 @itemize
 @item
@@ -615,13 +635,14 @@ representations:
 @item @code{BASE64}.
 @end itemize
 
-Base32 is the representation used by default by Google Authenticator, and
-Base64 is offered since it is the default representation used by
-@acronym{RFC} 6030, @emph{Portable Symmetric Key Container (PSKC)}, since it
-is commonly used by software platforms and hardware TOTP token providers.
+Base32 is the representation used by default by Google Authenticator, and Base64
+is offered since it is the default representation used by @acronym{RFC} 6030,
+@emph{Portable Symmetric Key Container (PSKC)}, since it is commonly used by
+software platforms and hardware TOTP token providers.
 
-All this parameters can be configured by passing a @code{GoogleAuthenticatorConfig}
-instance to a @code{GoogleAuthenticator} constructor.
+All these parameters can be configured by passing an instance of the
+@code{GoogleAuthenticatorConfig} class to the constructor of the
+@code{GoogleAuthenticator} class.
 
 @subsection @code{GoogleAuthenticatorConfigBuilder}
 @code{GoogleAuthenticatorConfig} instances can only be built using
@@ -634,7 +655,8 @@ instance with the following characteristics:
 It uses a time step size of one minute.
 
 @item
-It validate TOTP password checking an interval of 5 time steps centered at the current time.
+It validate TOTP password checking an interval of 5 time steps centered at the
+current time.
 
 @item
 It validates and creates TOTP passwords of 8 digits.
@@ -652,44 +674,43 @@ GoogleAuthenticator ga =
 @end example
 
 @section @command{GoogleAuthenticatorException}
-This class is the root exception used by library methods.
-The exception is a subtype of @command{RuntimeException} so that library method
-callers need neither catch nor declare this exception in their calling methods.
+This class is the root exception used by library methods.  The exception is a
+subtype of @command{RuntimeException} so that library method callers need
+neither catch nor declare this exception in their calling methods.
 
 @section @command{GoogleAuthenticatorKey}
 This inmutable class is a JavaBean used by the GoogleAuthenticator library to
-represent a newly-created set of credentials.
-Currently, this class publishes the following read-only properties:
+represent a newly-created set of credentials.  Currently, this class publishes
+the following read-only properties:
 
 @table @command
 @item String key
 The shared secret.
 
 @item List<Integer> scratchCodes
-A list of scratch codes.
-Currently, 5 scratch codes are provided and there is no way to generate others
-without creating a new credential.
+A list of scratch codes.  Currently, 5 scratch codes are provided and there is
+no way to generate others without creating a new credential.
 
 @item int verificationCode
-The verification code, that is, the @acronym{TOTP} password when at time-step
-0 (the Unix Epoch).
+The verification code, that is, the @acronym{TOTP} password when at time-step 0
+(the Unix Epoch).
 
 @end table
 
 @section @command{GoogleAuthenticatorQRGenerator}
 This class is a helper class which provides a way to generate @acronym{QR} codes
-using the Google Chart @acronym{API}.
-Please note that the usage of this method is subject to the license and usage
-restrinctions of the Google Chart @acronym{API}.
+using the Google Chart @acronym{API}.  Please note that the usage of this method
+is subject to the license and usage restrinctions of the Google Chart
+@acronym{API}.
 
 This class publishes the following method:
 
 @table @command
 @item static String getOtpAuthURL(String issuer, String accountName, GoogleAuthenticatorKey credentials)
 Returns the URL of a Google Chart @acronym{API} call to generate a @acronym{QR}
-barcode to be loaded into the Google Authenticator application.
-The user scans this bar code with the application on their smart phones or
-enters the secret manually.
+barcode to be loaded into the Google Authenticator application.  The user scans
+this bar code with the application on their smart phones or enters the secret
+manually.
 @end table
 
 @noindent
@@ -699,20 +720,19 @@ method's functionality.
 @section @command{ICredentialRepository}
 The @command{ICredentialRepository} is a service interface which can be
 implemented by a library user to provide a callback that establishes a relation
-between a user name and its shared secret.
-The methods of the @acronym{API} that accept a user name instead of the shared
-secret will use this callback to retrieve that user's shared key.
-This interface is optional and needs not be implemented, unless you want the
-library code to perform basic user management tasks.
-Methods accepting user names are used when no @code{ICredentialRepository}
-service is available will fail.
+between a user name and its shared secret.  The methods of the @acronym{API}
+that accept a user name instead of the shared secret will use this callback to
+retrieve that user's shared key.  This interface is optional and needs not be
+implemented, unless you want the library code to perform basic user management
+tasks.  Methods accepting user names are used when no
+@code{ICredentialRepository} service is available will fail.
 
 This interface defines the following methods:
 
 @table @command
 @item String getSecretKey(String userName);
-This method returns the shared secret of the specified user.
-If the specified user does not exist, the method shall @emph{fail} throwing a
+This method returns the shared secret of the specified user.  If the specified
+user does not exist, the method shall @emph{fail} throwing a
 @command{GoogleAuthenticatorException}.
 
 @item void saveUserCredentials(String userName, String secretKey, int validationCode, List<Integer> scratchCodes);
@@ -720,16 +740,15 @@ This method saves the credentials of the specified user.
 @end table
 
 The service lookup mechanism used by the library is the @code{ServiceLoader}
-facility provided by Java @acronym{SE}.
-Implementors needs creating a file named after the service interface,
-that is
+facility provided by Java @acronym{SE}.  Implementors needs creating a file
+named after the service interface, that is
 @example
 com.warrenstrange.googleauth.ICredentialRepository
 @end example
 @noindent
-and one line with the name of each implementing class.
-The library will use the @command{ServiceLoader} class to discover the
-available implementations and will use the @emph{first} available.
+and one line with the name of each implementing class.  The library will use the
+@command{ServiceLoader} class to discover the available implementations and will
+use the @emph{first} available.
 
 @section @command{IGoogleAuthenticator}
 This interfaces publishes the main library @acronym{API}:
@@ -748,35 +767,32 @@ The user must register this secret on their device.
 
 @item GoogleAuthenticatorKey createCredentials(String userName);
 This method generates a new set of credentials invoking the
-@code{createCredentials} method with no arguments.
-The generated credentials are then saved using the configured
-@code{ICredentialRepository} service.
+@code{createCredentials} method with no arguments.  The generated credentials
+are then saved using the configured @code{ICredentialRepository} service.
 
 The user must register this secret on their device.
 
 @item int getWindowSize();
-Get the default window size used by this instance when an explicit value
-is not specified.
+Get the default window size used by this instance when an explicit value is not
+specified.
 
 @item void setWindowSize(int s);
-Set the default window size used by this instance when an explicit value
-is not specified.
-This is an integer value representing the number of 30
-second windows that are checked during the validation process, to account for
-differences between the server and the client clocks.
-The bigger the window, the more tolerant the library is about clock skews.
+Set the default window size used by this instance when an explicit value is not
+specified.  This is an integer value representing the number of 30 second
+windows that are checked during the validation process, to account for
+differences between the server and the client clocks.  The bigger the window,
+the more tolerant the library is about clock skews.
 
 @item boolean authorize(String secret, int verificationCode);
-Checks a verification code against a secret key using the current time.
-The algorithm also checks in a time window whose size determined by the
-@code{windowSize} property of this class.
-The default value of 30 seconds recommended by @acronym{RFC} 6238 is used
-for the interval size.
+Checks a verification code against a secret key using the current time.  The
+algorithm also checks in a time window whose size determined by the
+@code{windowSize} property of this class.  The default value of 30 seconds
+recommended by @acronym{RFC} 6238 is used for the interval size.
 
 @item boolean authorizeUser(String userName, int verificationCode);
-This method validates a verification code of the specified user whose
-private key is retrieved from the configured credential repository.
-This method delegates the validation to the @code{authorize} method.
+This method validates a verification code of the specified user whose private
+key is retrieved from the configured credential repository.  This method
+delegates the validation to the @code{authorize} method.
 
 @end table
 

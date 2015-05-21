@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2014, Enrico Maria Crisostomo
+ * Copyright (c) 2014-2015 Enrico M. Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- *   * Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
+ *   * Redistributions of source code must retain the above copyright notice, this
+ *     list of conditions and the following disclaimer.
  *
  *   * Redistributions in binary form must reproduce the above copyright notice,
  *     this list of conditions and the following disclaimer in the documentation
@@ -77,8 +77,8 @@ public class GoogleAuthTest {
 
         // Copy all the REAL bytes, not the "first"
         byte[] ret = new byte[bArray.length - 1];
-        for (int i = 0; i < ret.length; i++)
-            ret[i] = bArray[i + 1];
+        System.arraycopy(bArray, 1, ret, 0, ret.length);
+
         return ret;
     }
 
