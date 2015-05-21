@@ -180,7 +180,9 @@ ticket on [github][githubIssues].
 ----
 
 Copyright (c) 2013 Warren Strange
+
 Copyright (c) 2014-2015 Enrico M. Crisostomo
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
