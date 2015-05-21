@@ -67,7 +67,7 @@ import java.util.logging.Logger;
  *
  * @author Enrico M. Crisostomo
  * @author Warren Strange
- * @version 0.4.5
+ * @version 0.5.0
  * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
  * @see <a href="http://code.google.com/p/google-authenticator" />
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
@@ -77,11 +77,15 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
 
     /**
      * The system property to specify the random number generator algorithm to use.
+     *
+     * @since 0.5.0
      */
     public static final String RNG_ALGORITHM = "com.warrenstrange.googleauth.rng.algorithm";
 
     /**
      * The system property to specify the random number generator provider to use.
+     *
+     * @since 0.5.0
      */
     public static final String RNG_ALGORITHM_PROVIDER = "com.warrenstrange.googleauth.rng.algorithmProvider";
 
@@ -128,12 +132,16 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
      * The default SecureRandom algorithm to use if none is specified.
      *
      * @see java.security.SecureRandom#getInstance(String)
+     * @since 0.5.0
      */
     @SuppressWarnings("SpellCheckingInspection")
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
 
     /**
      * The default random number algorithm provider to use if none is specified.
+     *
+     * @see java.security.SecureRandom#getInstance(String)
+     * @since 0.5.0
      */
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
@@ -173,12 +181,20 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator {
         this.config = config;
     }
 
+    /**
+     * @return the random number generator algorithm.
+     * @since 0.5.0
+     */
     private String getRandomNumberAlgorithm() {
         return System.getProperty(
                 RNG_ALGORITHM,
                 DEFAULT_RANDOM_NUMBER_ALGORITHM);
     }
 
+    /**
+     * @return the random number generator algorithm provider.
+     * @since 0.5.0
+     */
     private String getRandomNumberAlgorithmProvider() {
         return System.getProperty(
                 RNG_ALGORITHM_PROVIDER,
