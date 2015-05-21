@@ -15,38 +15,36 @@ served as a reference, and was created upon code published in
 Whom Is This Library For
 ------------------------
 
-Any developer creating a Java application which has user logins that could be protected by two factor authentication.
-That is, rather than just relying on the quality and the safety of a password, the application can require a second token be also entered.
-This token changes every 30 seconds.
+Any developer who wants to add TOTP multi-factor authentication to a Java
+application and needs the server-side code to create TOTP shared secrets
+and verify TOTP passwords.
 
-Although there are dedicated token devices available (such as what you get from your bank),
-a user may install a token generating application on their desktop or mobile device.
+Users may use TOTP-compliant token devicess (such as those you get from your bank),
+or a software-based token application (such as Google Authenticator).
 
 Installing
 ----------
 
 Add a dependency to your build environment.
 
-In gradle
-
-     compile 'com.warrenstrange:googleauth:0.4.3'
-
-In maven
+If you are using Maven:
 
     <dependency>
       <groupId>com.warrenstrange</groupId>
       <artifactId>googleauth</artifactId>
-      <version>0.4.3</version>
+      <version>0.5.0</version>
     </dependency>
+
+If you are using Gradle:
+
+     compile 'com.warrenstrange:googleauth:0.5.0'
 
 The required libraries will be automatically pulled into your project:
 
   * Apache Commons Codec.
   * Apache HTTP client.
 
-
-A minimum of Java 7 is required.
-
+The minimum Java version required to build and use this library is Java 7.
 
 Client Applications
 -------------------
