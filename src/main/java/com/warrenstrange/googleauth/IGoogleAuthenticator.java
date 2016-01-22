@@ -34,7 +34,8 @@ package com.warrenstrange.googleauth;
  * Google Authenticator library interface.
  */
 @SuppressWarnings("UnusedDeclaration")
-public interface IGoogleAuthenticator {
+public interface IGoogleAuthenticator
+{
     /**
      * This method generates a new set of credentials including:
      * <ol>
@@ -63,12 +64,8 @@ public interface IGoogleAuthenticator {
     GoogleAuthenticatorKey createCredentials(String userName);
 
     /**
-     * Checks a verification code against a secret key using the current time.
-     * The algorithm also checks in a time window whose size determined by the
-     * <code>windowSize</code> property of this class.
-     * <p/>
-     * The default value of 30 seconds recommended by RFC 6238 is used for the
-     * interval size.
+     * Checks a verification code against a secret key using the current time
+     * and no clock drift.
      *
      * @param secret           the Base32 encoded secret key.
      * @param verificationCode the verification code.
@@ -79,14 +76,41 @@ public interface IGoogleAuthenticator {
      *                                      The only failures that should occur
      *                                      are related with the cryptographic
      *                                      functions provided by the JCE.
+     * @see #authorize(String, int, int)
      */
     boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException;
 
     /**
+     * Checks a verification code against a secret key using the current time
+     * and the specified clock drift.  The algorithm also checks in a time
+     * window whose size determined by the <code>windowSize</code> property of
+     * this class.  The clock drift {@code d} is the difference
+     * {@code d = u - c} between the current time {@code u} and the time of the
+     * TOTP device generating the password {@code verificationCode}.
+     * <p/>
+     * The default value of 30 seconds recommended by RFC 6238 is used for the
+     * interval size.
+     *
+     * @param secret           The Base32 encoded secret key.
+     * @param verificationCode The verification code.
+     * @param drift            The clock drift.
+     * @return {@code true} if the validation code is valid, {@code false}
+     * otherwise.
+     * @throws GoogleAuthenticatorException if a failure occurs during the
+     *                                      calculation of the validation code.
+     *                                      The only failures that should occur
+     *                                      are related with the cryptographic
+     *                                      functions provided by the JCE.
+     */
+    boolean authorize(String secret, int verificationCode, long drift)
+            throws GoogleAuthenticatorException;
+
+    /**
      * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository. This
-     * method delegates the validation to the <code>#authorize</code> method.
+     * private key is retrieved from the configured credential repository.  This
+     * method delegates the validation to the
+     * {@link #authorizeUser(String, int, int)} method with no clock drift.
      *
      * @param userName         The user whose verification code is to be
      *                         validated.
@@ -98,4 +122,23 @@ public interface IGoogleAuthenticator {
      */
     boolean authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException;
+
+    /**
+     * This method validates a verification code of the specified user whose
+     * private key is retrieved from the configured credential repository.  This
+     * method delegates the validation to the
+     * {@link #authorize(String, int, int)} method.
+     *
+     * @param userName         The user whose verification code is to be
+     *                         validated.
+     * @param verificationCode The validation code.
+     * @param drift            The clock drift.
+     * @return <code>true</code> if the validation code is valid,
+     * <code>false</code> otherwise.
+     * @throws GoogleAuthenticatorException if an unexpected error occurs.
+     * @see #authorize(String, int)
+     */
+    boolean authorizeUser(String userName, int verificationCode, long drift)
+            throws GoogleAuthenticatorException;
+
 }
