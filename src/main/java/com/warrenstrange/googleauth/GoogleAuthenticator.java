@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Enrico M. Crisostomo
+ * Copyright (c) 2014-2016 Enrico M. Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -515,11 +515,11 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException
     {
-        return authorize(secret, verificationCode, 0);
+        return authorize(secret, verificationCode, new Date().getTime());
     }
 
     @Override
-    public boolean authorize(String secret, int verificationCode, long drift)
+    public boolean authorize(String secret, int verificationCode, long time)
             throws GoogleAuthenticatorException
     {
         // Checking user input and failing if the secret key was not provided.
@@ -538,7 +538,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         return checkCode(
                 secret,
                 verificationCode,
-                new Date().getTime() - drift,
+                time,
                 this.config.getWindowSize());
     }
 
@@ -546,15 +546,15 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public boolean authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException
     {
-        return authorizeUser(userName, verificationCode, 0);
+        return authorizeUser(userName, verificationCode, new Date().getTime());
     }
 
     @Override
-    public boolean authorizeUser(String userName, int verificationCode, long drift) throws GoogleAuthenticatorException
+    public boolean authorizeUser(String userName, int verificationCode, long time) throws GoogleAuthenticatorException
     {
         ICredentialRepository repository = getValidCredentialRepository();
 
-        return authorize(repository.getSecretKey(userName), verificationCode, drift);
+        return authorize(repository.getSecretKey(userName), verificationCode, time);
     }
 
     /**
