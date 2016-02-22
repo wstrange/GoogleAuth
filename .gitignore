@@ -1,6 +1,7 @@
 /target
 .idea/*
 *.iml
+*.versionsBackup
 
 # Autotools
 Makefile.in
