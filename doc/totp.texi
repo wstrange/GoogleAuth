@@ -112,14 +112,14 @@ authentication.  No more, no less.
 
 There exist more complex and comprehensive solutions, and if you need something
 more than being able to perform @acronym{TOTP} authentication, chances are you
-should assess whether you should use this library or some other product.
+should assess whether to use this library or some other product.
 
 On the other hand, if what you are looking @emph{is} performing @acronym{TOTP}
 authentication, then this library will provide an easy to use @acronym{API} and
 a @emph{very} compact library: currently, the size of the library @acronym{JAR}
-archive is smaller than 20 @acronym{KB}.  Most importantly, this library has
-very few@footnote{This library's dependencies are compact as well and do not
-pull-in a chain of dependencies themselves.}  dependencies:
+archive is smaller than 20 kB.  Most importantly, this library has very
+few@footnote{This library's dependencies are compact as well and do not pull-in
+a chain of dependencies themselves.}  dependencies:
 
 @itemize
 @item
