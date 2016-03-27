@@ -160,6 +160,8 @@ public class GoogleAuthTest {
         boolean isCodeValid = ga.authorize(SECRET_KEY, VALIDATION_CODE);
 
         System.out.println("Check VALIDATION_CODE = " + isCodeValid);
+        assertTrue("Check VALIDATION_CODE", isCodeValid);
+
     }
 
     @Test
@@ -174,5 +176,6 @@ public class GoogleAuthTest {
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 
         System.out.println("Check VALIDATION_CODE = " + isCodeValid);
+        assertTrue("Check VALIDATION_CODE", isCodeValid);
     }
 }
