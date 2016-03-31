@@ -137,4 +137,20 @@ public interface IGoogleAuthenticator
     boolean authorizeUser(String userName, int verificationCode, long time)
             throws GoogleAuthenticatorException;
 
+    /**
+     * This method loads the first available ICredentialRepository
+     * registered using the Java service loader API.
+     *
+     * However, if the credential repository is manually set, that one will be returned instead.
+     *
+     * @return the first registered ICredentialRepository or <code>null</code>
+     * if none is found.
+     */
+    ICredentialRepository getCredentialRepository();
+
+    /**
+     * @see #getCredentialRepository()
+     */
+    void setCredentialRepository(ICredentialRepository credentialRepository);
+
 }
