@@ -38,6 +38,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -169,6 +170,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
             getRandomNumberAlgorithm(),
             getRandomNumberAlgorithmProvider());
+
+    /**
+     * a cache of the credential repository. {@code null} if no value is set yet.
+     * using {@link AtomicReference} as a singleton reference holder
+     */
+    private AtomicReference<ICredentialRepository> credentialRepository;
 
     public GoogleAuthenticator()
     {
@@ -582,24 +589,30 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         return repository;
     }
 
-    /**
-     * This method loads the first available ICredentialRepository
-     * registered using the Java service loader API.
-     *
-     * @return the first registered ICredentialRepository or <code>null</code>
-     * if none is found.
-     */
-    private ICredentialRepository getCredentialRepository()
+    @Override
+    public ICredentialRepository getCredentialRepository()
     {
-        ServiceLoader<ICredentialRepository> loader =
-                ServiceLoader.load(ICredentialRepository.class);
+        if (credentialRepository == null) {
+            AtomicReference<ICredentialRepository> holder =
+                    new AtomicReference<ICredentialRepository>();
+            ServiceLoader<ICredentialRepository> loader =
+                    ServiceLoader.load(ICredentialRepository.class);
 
-        //noinspection LoopStatementThatDoesntLoop
-        for (ICredentialRepository repository : loader)
-        {
-            return repository;
+            //noinspection LoopStatementThatDoesntLoop
+            for (ICredentialRepository repository : loader)
+            {
+                holder.set(repository);
+                break;
+            }
+
+            credentialRepository = holder;
         }
 
-        return null;
+        return credentialRepository.get();
+    }
+
+    @Override
+    public void setCredentialRepository(ICredentialRepository credentialRepository) {
+        this.credentialRepository = new AtomicReference<ICredentialRepository>(credentialRepository);
     }
 }
