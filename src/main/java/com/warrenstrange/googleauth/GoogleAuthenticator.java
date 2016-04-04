@@ -172,7 +172,8 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
             getRandomNumberAlgorithmProvider());
 
     /**
-     * a cache of the credential repository. {@code null} if no value is set yet
+     * a cache of the credential repository. {@code null} if no value is set yet.
+     * using {@link AtomicReference} as a singleton reference holder
      */
     private AtomicReference<ICredentialRepository> credentialRepository;
 
@@ -592,16 +593,19 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public ICredentialRepository getCredentialRepository()
     {
         if (credentialRepository == null) {
-            credentialRepository = new AtomicReference<ICredentialRepository>();
+            AtomicReference<ICredentialRepository> holder =
+                    new AtomicReference<ICredentialRepository>();
             ServiceLoader<ICredentialRepository> loader =
                     ServiceLoader.load(ICredentialRepository.class);
 
             //noinspection LoopStatementThatDoesntLoop
             for (ICredentialRepository repository : loader)
             {
-                credentialRepository.set(repository);
+                holder.set(repository);
                 break;
             }
+
+            credentialRepository = holder;
         }
 
         return credentialRepository.get();
