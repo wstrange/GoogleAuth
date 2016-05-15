@@ -579,7 +579,7 @@ newly-generated credentials are @emph{stored} and keys are @emph{retrieved} when
 a password must be validated.
 
 @item IGoogleAuthenticator
-This is the main @emph{API} interface and it publishes the library entry points.
+This is the main @acronym{API} interface and it publishes the library entry points.
 
 @item KeyRepresentation
 An enumeration of all the available secret key representations, currently:
@@ -784,15 +784,30 @@ differences between the server and the client clocks.  The bigger the window,
 the more tolerant the library is about clock skews.
 
 @item boolean authorize(String secret, int verificationCode);
-Checks a verification code against a secret key using the current time.  The
-algorithm also checks in a time window whose size determined by the
-@code{windowSize} property of this class.  The default value of 30 seconds
-recommended by @acronym{RFC} 6238 is used for the interval size.
+Checks a verification code against a secret key using the current
+time.  The algorithm also checks in a time window whose size
+determined by the @code{windowSize} property of this class.  The
+default value of 30 seconds recommended by @acronym{RFC} 6238 is used
+for the interval size.
+
+@item boolean authorize(String secret, int verificationCode, long time);
+Checks a verification code against a secret key the specified time.
+The algorithm also checks in a time window whose size determined by
+the @code{windowSize} property of this class.  The default value of 30
+seconds recommended by @acronym{RFC} 6238 is used for the interval
+size.
 
 @item boolean authorizeUser(String userName, int verificationCode);
-This method validates a verification code of the specified user whose private
-key is retrieved from the configured credential repository.  This method
-delegates the validation to the @code{authorize} method.
+This method validates a verification code of the specified user whose
+private key is retrieved from the configured credential repository.
+This method delegates the validation to the @code{authorize(String,
+int)} method.
+
+@item boolean authorizeUser(String userName, int verificationCode, long time);
+This method validates a verification code of the specified user whose
+private key is retrieved from the configured credential repository.
+This method delegates the validation to the @code{authorize(String,
+int, long)} method.
 
 @end table
 
