@@ -20,7 +20,7 @@
 This manual is for the Java @acronym{TOTP} server library (version
 @value{VERSION}, @value{UPDATED}).
 
-Copyright @copyright{} 2013-2015 Enrico M. Crisostomo
+Copyright @copyright{} 2013-2016 Enrico M. Crisostomo
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
