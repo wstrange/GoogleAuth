@@ -146,7 +146,7 @@ public interface IGoogleAuthenticator
      *
      * @param repository The credential repository to use, or {@code null} to
      *                   disable this feature.
-     * @since 0.7.0
+     * @since 1.0.0
      */
     void setCredentialRepository(ICredentialRepository repository);
 }

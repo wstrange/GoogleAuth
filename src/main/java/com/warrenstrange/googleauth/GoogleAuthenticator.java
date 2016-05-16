@@ -605,10 +605,10 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         for (ICredentialRepository repository : loader)
         {
             this.credentialRepository = repository;
-            return repository;
+            break;
         }
 
-        return null;
+        return this.credentialRepository;
     }
 
     @Override
