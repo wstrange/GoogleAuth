@@ -20,7 +20,7 @@
 This manual is for the Java @acronym{TOTP} server library (version
 @value{VERSION}, @value{UPDATED}).
 
-Copyright @copyright{} 2013-2015 Enrico M. Crisostomo
+Copyright @copyright{} 2013-2016 Enrico M. Crisostomo
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -750,6 +750,21 @@ and one line with the name of each implementing class.  The library will use the
 @command{ServiceLoader} class to discover the available implementations and will
 use the @emph{first} available.
 
+@subsection Setting a credential repository on a per-instance basis
+
+Since 1.0.0, the @code{ServiceLoader} @acronym{API} is not the only
+way to set the credential repository: the
+@code{setCredentialRepository(ICredentialRepository)} method can be
+used to explicitly set the credential repository used by an
+@code{IGoogleAuthenticator} instance, effectively disabling the
+autmatic service discovery described in the previous section.
+
+@subsection Disabling the credential repository feature
+
+Sometimes it may be desirable to disable this feature on specific
+instances.  This can be achieved by passing @code{null} to the
+@code{setCredentialRepository} method.
+
 @section @command{IGoogleAuthenticator}
 This interfaces publishes the main library @acronym{API}:
 
@@ -808,6 +823,16 @@ This method validates a verification code of the specified user whose
 private key is retrieved from the configured credential repository.
 This method delegates the validation to the @code{authorize(String,
 int, long)} method.
+
+@item ICredentialRepository getCredentialRepository();
+This method returns the credential repository used by this instance,
+or @code{null} if none is set or none can be found using the
+@emph{ServiceLoader} @acronym{API}.
+
+@item void setCredentialRepository(ICredentialRepository repository);
+This method sets the credential repository used by this instance.  If
+@code{null} is passed to this method, no credential repository will be
+used, nor discovered using the @emph{ServiceLoader} @acronym{API}.
 
 @end table
 
