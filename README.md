@@ -133,11 +133,16 @@ provided to users who want to integrate this functionality.  The
 *ICredentialRepository* interface defines the contract between a credential
 repository and this library.
 
-The library looks for instances of this interface using the
-[Java ServiceLoader API][serviceLoader] (introduced in Java 6), that is,
-scanning the `META-INF/services` package looking for a file named
-`com.warrenstrange.googleauth.ICredentialRepository` and, if found, loading the
-provider classes listed therein.
+The credential repository can be set in multiple ways:
+
+  * The credential repository can be set on a per-instance basis, using the
+  `credentialRepository` property of the `IGoogleAuthenticator` interface.
+
+  * The library looks for instances of this interface using the
+    [Java ServiceLoader API][serviceLoader] (introduced in Java 6), that is,
+    scanning the `META-INF/services` package looking for a file named
+    `com.warrenstrange.googleauth.ICredentialRepository` and, if found, loading
+    the provider classes listed therein.
 
 Two methods needs to be implemented in the *ICredentialRepository* interface.
 
