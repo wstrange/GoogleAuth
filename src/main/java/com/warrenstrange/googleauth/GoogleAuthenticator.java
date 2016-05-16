@@ -170,6 +170,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
             getRandomNumberAlgorithm(),
             getRandomNumberAlgorithmProvider());
 
+    private ICredentialRepository credentialRepository;
+    private boolean credentialRepositorySearched;
+
     public GoogleAuthenticator()
     {
         config = new GoogleAuthenticatorConfig();
@@ -589,17 +592,29 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * @return the first registered ICredentialRepository or <code>null</code>
      * if none is found.
      */
-    private ICredentialRepository getCredentialRepository()
+    public ICredentialRepository getCredentialRepository()
     {
+        if (this.credentialRepositorySearched) return this.credentialRepository;
+
+        this.credentialRepositorySearched = true;
+
         ServiceLoader<ICredentialRepository> loader =
                 ServiceLoader.load(ICredentialRepository.class);
 
         //noinspection LoopStatementThatDoesntLoop
         for (ICredentialRepository repository : loader)
         {
-            return repository;
+            this.credentialRepository = repository;
+            break;
         }
 
-        return null;
+        return this.credentialRepository;
+    }
+
+    @Override
+    public void setCredentialRepository(ICredentialRepository repository)
+    {
+        this.credentialRepository = repository;
+        this.credentialRepositorySearched = true;
     }
 }

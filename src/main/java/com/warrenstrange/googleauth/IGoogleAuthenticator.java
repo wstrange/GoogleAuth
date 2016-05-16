@@ -98,6 +98,7 @@ public interface IGoogleAuthenticator
      *                                      The only failures that should occur
      *                                      are related with the cryptographic
      *                                      functions provided by the JCE.
+     * @since 0.6.0
      */
     boolean authorize(String secret, int verificationCode, long time)
             throws GoogleAuthenticatorException;
@@ -133,8 +134,29 @@ public interface IGoogleAuthenticator
      * <code>false</code> otherwise.
      * @throws GoogleAuthenticatorException if an unexpected error occurs.
      * @see #authorize(String, int)
+     * @since 0.6.0
      */
     boolean authorizeUser(String userName, int verificationCode, long time)
             throws GoogleAuthenticatorException;
 
+    /**
+     * This method returns the credential repository used by this instance, or
+     * {@code null} if none is set or none can be found using the ServiceLoader
+     * API.
+     *
+     * @return the credential repository used by this instance.
+     * @since 1.0.0
+     */
+    ICredentialRepository getCredentialRepository();
+
+    /**
+     * This method sets the credential repository used by this instance.  If
+     * {@code null} is passed to this method, no credential repository will be
+     * used, nor discovered using the ServiceLoader API.
+     *
+     * @param repository The credential repository to use, or {@code null} to
+     *                   disable this feature.
+     * @since 1.0.0
+     */
+    void setCredentialRepository(ICredentialRepository repository);
 }
