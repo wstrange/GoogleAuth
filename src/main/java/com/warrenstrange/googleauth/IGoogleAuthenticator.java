@@ -140,6 +140,16 @@ public interface IGoogleAuthenticator
             throws GoogleAuthenticatorException;
 
     /**
+     * This method returns the credential repository used by this instance, or
+     * {@code null} if none is set or none can be found using the ServiceLoader
+     * API.
+     *
+     * @return the credential repository used by this instance.
+     * @since 1.0.0
+     */
+    ICredentialRepository getCredentialRepository();
+
+    /**
      * This method sets the credential repository used by this instance.  If
      * {@code null} is passed to this method, no credential repository will be
      * used, nor discovered using the ServiceLoader API.

@@ -592,7 +592,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * @return the first registered ICredentialRepository or <code>null</code>
      * if none is found.
      */
-    private ICredentialRepository getCredentialRepository()
+    public ICredentialRepository getCredentialRepository()
     {
         if (this.credentialRepositorySearched) return this.credentialRepository;
 
