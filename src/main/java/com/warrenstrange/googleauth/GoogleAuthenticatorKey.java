@@ -80,7 +80,7 @@ public final class GoogleAuthenticatorKey {
      * @param code         the verification code at time = 0 (the UNIX epoch).
      * @param scratchCodes the list of scratch codes.
      */
-    /* package */ GoogleAuthenticatorKey(
+    public GoogleAuthenticatorKey(
             String secretKey, int code,
             List<Integer> scratchCodes) {
         key = secretKey;
