@@ -283,6 +283,11 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         }
     }
 
+    private long getTimeWindowFromTime(long time)
+    {
+        return time / this.config.getTimeStepSizeInMillis();
+    }
+
     /**
      * This method implements the algorithm specified in RFC 6238 to check if a
      * validation code is valid in a given instant of time for the given secret
@@ -301,26 +306,11 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
             long timestamp,
             int window)
     {
-        byte[] decodedKey;
-
-        // Decoding the secret key to get its raw byte representation.
-        switch (config.getKeyRepresentation())
-        {
-            case BASE32:
-                Base32 codec32 = new Base32();
-                decodedKey = codec32.decode(secret);
-                break;
-            case BASE64:
-                Base64 codec64 = new Base64();
-                decodedKey = codec64.decode(secret);
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown key representation type.");
-        }
+        byte[] decodedKey = decodeSecret(secret);
 
         // convert unix time into a 30 second "window" as specified by the
         // TOTP specification. Using Google's default interval of 30 seconds.
-        final long timeWindow = timestamp / this.config.getTimeStepSizeInMillis();
+        final long timeWindow = getTimeWindowFromTime(timestamp);
 
         // Calculating the verification code of the given key in each of the
         // time intervals and returning true if the provided code is equal to
@@ -340,6 +330,22 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
         // The verification code is invalid.
         return false;
+    }
+
+    private byte[] decodeSecret(String secret)
+    {
+        // Decoding the secret key to get its raw byte representation.
+        switch (config.getKeyRepresentation())
+        {
+            case BASE32:
+                Base32 codec32 = new Base32();
+                return codec32.decode(secret);
+            case BASE64:
+                Base64 codec64 = new Base64();
+                return codec64.decode(secret);
+            default:
+                throw new IllegalArgumentException("Unknown key representation type.");
+        }
     }
 
     @Override
@@ -493,6 +499,31 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     private int calculateValidationCode(byte[] secretKey)
     {
         return calculateCode(secretKey, 0);
+    }
+
+
+    public int getTotpPassword(String secret)
+    {
+        return getTotpPassword(secret, new Date().getTime());
+    }
+
+    public int getTotpPassword(String secret, long time)
+    {
+        return calculateCode(decodeSecret(secret), getTimeWindowFromTime(time));
+    }
+
+    public int getTotpPasswordOfUser(String userName)
+    {
+        return getTotpPassword(userName, new Date().getTime());
+    }
+
+    public int getTotpPasswordOfUser(String userName, long time)
+    {
+        ICredentialRepository repository = getValidCredentialRepository();
+
+        return calculateCode(
+                decodeSecret(repository.getSecretKey(userName)),
+                getTimeWindowFromTime(time));
     }
 
     /**

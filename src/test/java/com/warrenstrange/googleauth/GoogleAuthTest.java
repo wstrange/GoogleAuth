@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Not really a unit test, but it shows the basic usage of this package.
@@ -56,7 +57,8 @@ import static org.junit.Assert.assertEquals;
  * </li>
  * </ol>
  */
-public class GoogleAuthTest {
+public class GoogleAuthTest
+{
 
     // Change this to the saved secret from the running the above test.
     @SuppressWarnings("SpellCheckingInspection")
@@ -64,13 +66,15 @@ public class GoogleAuthTest {
     private static final int VALIDATION_CODE = 598775;
 
     @BeforeClass
-    public static void setupMockCredentialRepository() {
+    public static void setupMockCredentialRepository()
+    {
         System.setProperty(
                 CredentialRepositoryMock.MOCK_SECRET_KEY_NAME,
                 SECRET_KEY);
     }
 
-    private static byte[] hexStr2Bytes(String hex) {
+    private static byte[] hexStr2Bytes(String hex)
+    {
         // Adding one byte to get the right conversion
         // Values starting with "0" can be converted
         byte[] bArray = new BigInteger("10" + hex, 16).toByteArray();
@@ -83,7 +87,8 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void rfc6238TestVectors() {
+    public void rfc6238TestVectors()
+    {
         // See RFC 6238, p. 14
         final String rfc6238TestKey = "3132333435363738393031323334353637383930";
         final byte[] key = hexStr2Bytes(rfc6238TestKey);
@@ -95,13 +100,15 @@ public class GoogleAuthTest {
         cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
         GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
 
-        for (int i = 0; i < testTime.length; ++i) {
+        for (int i = 0; i < testTime.length; ++i)
+        {
             assertEquals(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds), testResults[i]);
         }
     }
 
     @Test
-    public void createCredentials() {
+    public void createCredentials()
+    {
         GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfigBuilder()
                         .setKeyRepresentation(KeyRepresentation.BASE64);
@@ -117,8 +124,10 @@ public class GoogleAuthTest {
         System.out.println("Please register (otpauth uri): " + otpAuthURL);
         System.out.println("Base64-encoded secret key is " + secret);
 
-        for (Integer i : scratchCodes) {
-            if (!googleAuthenticator.validateScratchCode(i)) {
+        for (Integer i : scratchCodes)
+        {
+            if (!googleAuthenticator.validateScratchCode(i))
+            {
                 throw new IllegalArgumentException("An invalid code has been " +
                         "generated: this is an application bug.");
             }
@@ -127,7 +136,17 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void createCredentialsForUser() {
+    public void createAndAuthenticate()
+    {
+        final GoogleAuthenticator ga = new GoogleAuthenticator();
+        final GoogleAuthenticatorKey key = ga.createCredentials();
+
+        assertTrue(ga.authorize(key.getKey(), ga.getTotpPassword(key.getKey())));
+    }
+
+    @Test
+    public void createCredentialsForUser()
+    {
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
 
         final GoogleAuthenticatorKey key =
@@ -140,8 +159,10 @@ public class GoogleAuthTest {
         System.out.println("Please register (otpauth uri): " + otpAuthURL);
         System.out.println("Secret key is " + secret);
 
-        for (Integer i : scratchCodes) {
-            if (!googleAuthenticator.validateScratchCode(i)) {
+        for (Integer i : scratchCodes)
+        {
+            if (!googleAuthenticator.validateScratchCode(i))
+            {
                 throw new IllegalArgumentException("An invalid code has been " +
                         "generated: this is an application bug.");
             }
@@ -150,7 +171,8 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void authorise() {
+    public void authorise()
+    {
         GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
@@ -163,7 +185,8 @@ public class GoogleAuthTest {
     }
 
     @Test
-    public void authoriseUser() {
+    public void authoriseUser()
+    {
         GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
