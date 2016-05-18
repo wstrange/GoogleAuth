@@ -64,9 +64,47 @@ public interface IGoogleAuthenticator
     GoogleAuthenticatorKey createCredentials(String userName);
 
     /**
+     * This method generates the current TOTP password.
+     *
+     * @param secret the encoded secret key.
+     * @return the current TOTP password.
+     * @since 1.1.0
+     */
+    int getTotpPassword(String secret);
+
+    /**
+     * This method generates the TOTP password at the specified time.
+     *
+     * @param secret The encoded secret key.
+     * @param time   The time to use to calculate the password.
+     * @return the TOTP password at the specified time.
+     * @since 1.1.0
+     */
+    int getTotpPassword(String secret, long time);
+
+    /**
+     * This method generates the current TOTP password.
+     *
+     * @param userName The user whose password must be created.
+     * @return the current TOTP password.
+     * @since 1.1.0
+     */
+    int getTotpPasswordOfUser(String userName);
+
+    /**
+     * This method generates the TOTP password at the specified time.
+     *
+     * @param userName The user whose password must be created.
+     * @param time     The time to use to calculate the password.
+     * @return the TOTP password at the specified time.
+     * @since 1.1.0
+     */
+    int getTotpPasswordOfUser(String userName, long time);
+
+    /**
      * Checks a verification code against a secret key using the current time.
      *
-     * @param secret           the Base32 encoded secret key.
+     * @param secret           the encoded secret key.
      * @param verificationCode the verification code.
      * @return <code>true</code> if the validation code is valid,
      * <code>false</code> otherwise.
@@ -88,7 +126,7 @@ public interface IGoogleAuthenticator
      * The default value of 30 seconds recommended by RFC 6238 is used for the
      * interval size.
      *
-     * @param secret           The Base32 encoded secret key.
+     * @param secret           The encoded secret key.
      * @param verificationCode The verification code.
      * @param time             The time to use to calculate the TOTP password..
      * @return {@code true} if the validation code is valid, {@code false}
