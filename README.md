@@ -16,11 +16,11 @@ Whom Is This Library For
 ------------------------
 
 Any developer who wants to add TOTP multi-factor authentication to a Java
-application and needs the server-side code to create TOTP shared secrets
-and verify TOTP passwords.
+application and needs the server-side code to create TOTP shared secrets,
+generate and verify TOTP passwords.
 
-Users may use TOTP-compliant token devices (such as those you get from your bank),
-or a software-based token application (such as Google Authenticator).
+Users may use TOTP-compliant token devices (such as those you get from your
+bank), or a software-based token application (such as Google Authenticator).
 
 Requirements
 ------------

@@ -508,6 +508,19 @@ making it more difficult to a man in the middle to steal a newly-generated
 identity, and since it encodes the shared secret, implementors should make sure
 the @acronym{QR} code is treated as securely as any other kind of credential.
 
+@section Generating a Password
+A @acronym{TOTP} password can be created using one of the
+@command{getTotpPassword*} methods, specifying:
+
+@itemize
+@item
+The secret or the username.
+
+@item
+The time for which the password should be generated.
+@end itemize
+
+
 @section Validating a Password
 A @acronym{TOTP} password is validated using one of the different
 @command{authorize*} methods provided by the library.  To validate a password,
@@ -532,14 +545,6 @@ factor.  @acronym{RFC 6238} @emph{recommends} using a default time-step size of
 @acronym{API} allows callers to specify the number of time-step windows that
 should be checked during the validation process, but does not currently allows
 the time-step size to be overridden.
-
-To authorize a @acronym{TOTP} password, one of the following methods shall be
-used:
-@table @command
-@item boolean authorize(String secret, int verificationCode);
-Authorize the specified TOTP password @command{verificationCode} using the
-specified secret key @command{secret}.
-@end table
 
 When the number @math{x} of time-step windows to use is specified, the
 implementation will check all the integral time-step in an interval @math{I}
