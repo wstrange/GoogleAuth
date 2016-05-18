@@ -68,6 +68,7 @@ public interface IGoogleAuthenticator
      *
      * @param secret the encoded secret key.
      * @return the current TOTP password.
+     * @since 1.1.0
      */
     int getTotpPassword(String secret);
 
@@ -76,26 +77,29 @@ public interface IGoogleAuthenticator
      *
      * @param secret The encoded secret key.
      * @param time   The time to use to calculate the password.
-     * @return
+     * @return the TOTP password at the specified time.
+     * @since 1.1.0
      */
     int getTotpPassword(String secret, long time);
 
     /**
      * This method generates the current TOTP password.
      *
-     * @param user The user whose password must be created.
+     * @param userName The user whose password must be created.
      * @return the current TOTP password.
+     * @since 1.1.0
      */
-    int getTotpPasswordOfUser(String user);
+    int getTotpPasswordOfUser(String userName);
 
     /**
      * This method generates the TOTP password at the specified time.
      *
-     * @param user The user whose password must be created.
-     * @param time The time to use to calculate the password.
-     * @return
+     * @param userName The user whose password must be created.
+     * @param time     The time to use to calculate the password.
+     * @return the TOTP password at the specified time.
+     * @since 1.1.0
      */
-    int getTotpPasswordOfUser(String user, long time);
+    int getTotpPasswordOfUser(String userName, long time);
 
     /**
      * Checks a verification code against a secret key using the current time.
