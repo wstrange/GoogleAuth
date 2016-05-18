@@ -1,0 +1,11 @@
+NEWS
+****
+
+New in 1.1.0:
+
+  * Add `getTotpPassword*` methods to generate TOTP passwords.
+
+New in 1.0.0:
+
+  * Add `getCredentialRepository()` and `setCredentialRepository()` methods to
+    set the credential repository on a per-instance basis.

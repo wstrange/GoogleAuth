@@ -508,6 +508,19 @@ making it more difficult to a man in the middle to steal a newly-generated
 identity, and since it encodes the shared secret, implementors should make sure
 the @acronym{QR} code is treated as securely as any other kind of credential.
 
+@section Generating a Password
+A @acronym{TOTP} password can be created using one of the
+@command{getTotpPassword*} methods, specifying:
+
+@itemize
+@item
+The secret or the username.
+
+@item
+The time for which the password should be generated.
+@end itemize
+
+
 @section Validating a Password
 A @acronym{TOTP} password is validated using one of the different
 @command{authorize*} methods provided by the library.  To validate a password,
@@ -532,14 +545,6 @@ factor.  @acronym{RFC 6238} @emph{recommends} using a default time-step size of
 @acronym{API} allows callers to specify the number of time-step windows that
 should be checked during the validation process, but does not currently allows
 the time-step size to be overridden.
-
-To authorize a @acronym{TOTP} password, one of the following methods shall be
-used:
-@table @command
-@item boolean authorize(String secret, int verificationCode);
-Authorize the specified TOTP password @command{verificationCode} using the
-specified secret key @command{secret}.
-@end table
 
 When the number @math{x} of time-step windows to use is specified, the
 implementation will check all the integral time-step in an interval @math{I}
@@ -787,17 +792,6 @@ are then saved using the configured @code{ICredentialRepository} service.
 
 The user must register this secret on their device.
 
-@item int getWindowSize();
-Get the default window size used by this instance when an explicit value is not
-specified.
-
-@item void setWindowSize(int s);
-Set the default window size used by this instance when an explicit value is not
-specified.  This is an integer value representing the number of 30 second
-windows that are checked during the validation process, to account for
-differences between the server and the client clocks.  The bigger the window,
-the more tolerant the library is about clock skews.
-
 @item boolean authorize(String secret, int verificationCode);
 Checks a verification code against a secret key using the current
 time.  The algorithm also checks in a time window whose size
@@ -833,6 +827,22 @@ or @code{null} if none is set or none can be found using the
 This method sets the credential repository used by this instance.  If
 @code{null} is passed to this method, no credential repository will be
 used, nor discovered using the @emph{ServiceLoader} @acronym{API}.
+
+@item getTotpPassword(String secret);
+This method generates the current @acronym{TOTP} password using the
+specified secret.
+
+@item getTotpPassword(String secret, long time);
+This method generates the @acronym{TOTP} password at the specified
+time using the specified secret.
+
+@item getTotpPasswordOfUser(String userName);
+This method generates the current @acronym{TOTP} password using key of
+the specified user.
+
+@item getTotpPasswordOfUser(String userName, long time);
+This method generates the @acronym{TOTP} password at the specified
+time using key of the specified user.
 
 @end table
 
