@@ -30,6 +30,8 @@
 
 package com.warrenstrange.googleauth;
 
+import java.net.URL;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class GoogleAuthenticatorConfig {
@@ -37,6 +39,8 @@ public class GoogleAuthenticatorConfig {
     private int windowSize = 3;
     private int codeDigits = 6;
     private int keyModulus = (int) Math.pow(10, codeDigits);
+    private long timeOffset = 0;
+    
     private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;
 
     /**
@@ -76,6 +80,16 @@ public class GoogleAuthenticatorConfig {
     public long getTimeStepSizeInMillis() {
         return timeStepSizeInMillis;
     }
+    
+    /**
+     * Returns the time offset to be added to local time
+     * The default value is 0
+     *
+     * @return the time offset
+     */
+    public long getTimeOffset() {
+        return timeOffset;
+    }
 
     /**
      * Returns an integer value representing the number of windows of size
@@ -100,6 +114,22 @@ public class GoogleAuthenticatorConfig {
 
         public GoogleAuthenticatorConfig build() {
             return config;
+        }
+        
+        public GoogleAuthenticatorConfigBuilder setSyncUrl(String uri) {
+        	long currentTime = new Date().getTime();
+        	long serverTime = currentTime;
+        	try
+        	{
+        		URL url = new URL(uri);
+        		serverTime = url.openConnection().getDate();
+        	}
+        	catch (Exception exc)
+        	{
+        		exc.printStackTrace();
+        	}
+        	config.timeOffset = serverTime - currentTime;
+        	return this;
         }
 
         public GoogleAuthenticatorConfigBuilder setCodeDigits(int codeDigits) {

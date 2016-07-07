@@ -35,8 +35,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigInteger;
+import java.net.URL;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -197,5 +201,28 @@ public class GoogleAuthTest
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 
         System.out.println("Check VALIDATION_CODE = " + isCodeValid);
+    }
+    
+    @Test
+    public void syncTimeCheck()
+    {
+        GoogleAuthenticatorConfigBuilder gacbServer =
+                new GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(1)
+                        .setCodeDigits(6)
+                        .setSyncUrl("https://www.google.com");
+        GoogleAuthenticator gaServer = new GoogleAuthenticator(gacbServer.build());
+        
+        GoogleAuthenticatorConfigBuilder gacb =
+                new GoogleAuthenticatorConfigBuilder()
+                        .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
+                        .setWindowSize(1)
+                        .setCodeDigits(6);
+        GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
+
+        int testServer = gaServer.getTotpPassword(SECRET_KEY);
+        int testLocal = ga.getTotpPassword(SECRET_KEY);
+        assertEquals(testServer, testLocal);
     }
 }

@@ -504,7 +504,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     public int getTotpPassword(String secret)
     {
-        return getTotpPassword(secret, new Date().getTime());
+        return getTotpPassword(secret, getTime());
     }
 
     public int getTotpPassword(String secret, long time)
@@ -514,7 +514,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     public int getTotpPasswordOfUser(String userName)
     {
-        return getTotpPassword(userName, new Date().getTime());
+        return getTotpPassword(userName, getTime());
     }
 
     public int getTotpPasswordOfUser(String userName, long time)
@@ -544,12 +544,17 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
                 throw new IllegalArgumentException("Unknown key representation type.");
         }
     }
+    
+    private long getTime()
+    {
+    	return new Date().getTime() + config.getTimeOffset();
+    }
 
     @Override
     public boolean authorize(String secret, int verificationCode)
             throws GoogleAuthenticatorException
     {
-        return authorize(secret, verificationCode, new Date().getTime());
+        return authorize(secret, verificationCode, getTime());
     }
 
     @Override
@@ -580,7 +585,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public boolean authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException
     {
-        return authorizeUser(userName, verificationCode, new Date().getTime());
+        return authorizeUser(userName, verificationCode, getTime());
     }
 
     @Override
