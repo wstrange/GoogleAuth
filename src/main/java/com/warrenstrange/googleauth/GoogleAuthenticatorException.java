@@ -39,6 +39,11 @@ package com.warrenstrange.googleauth;
 public class GoogleAuthenticatorException extends RuntimeException {
 
     /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2697618629003675403L;
+
+	/**
      * Builds an exception with the provided error message.
      *
      * @param message the error message.

@@ -135,7 +135,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * @see java.security.SecureRandom#getInstance(String)
      * @since 0.5.0
      */
-    @SuppressWarnings("SpellCheckingInspection")
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM = "SHA1PRNG";
 
     /**

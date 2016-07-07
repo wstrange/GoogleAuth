@@ -33,7 +33,6 @@ package com.warrenstrange.googleauth;
 /**
  * Google Authenticator library interface.
  */
-@SuppressWarnings("UnusedDeclaration")
 public interface IGoogleAuthenticator
 {
     /**

@@ -48,7 +48,6 @@ class ReseedingSecureRandom {
     private final AtomicInteger count = new AtomicInteger(0);
     private SecureRandom secureRandom;
 
-    @SuppressWarnings("UnusedDeclaration")
     ReseedingSecureRandom() {
         this.algorithm = null;
         this.provider = null;
@@ -56,7 +55,6 @@ class ReseedingSecureRandom {
         buildSecureRandom();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     ReseedingSecureRandom(String algorithm) {
         if (algorithm == null) {
             throw new IllegalArgumentException("Algorithm cannot be null.");

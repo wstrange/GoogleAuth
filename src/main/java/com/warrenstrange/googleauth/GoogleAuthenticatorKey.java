@@ -100,7 +100,6 @@ public final class GoogleAuthenticatorKey {
      * Google Authenticator application.
      * @deprecated Use GoogleAuthenticatorQRGenerator##getOtpAuthURL instead.
      */
-    @SuppressWarnings("deprecation, unused")
     public static String getQRBarcodeURL(String user, String host, String secret) {
         return String.format(QR_FORMAT, user, host, secret);
     }

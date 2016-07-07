@@ -66,7 +66,6 @@ public class GoogleAuthenticatorConfig {
      *
      * @return the number of digits in the generated code.
      */
-    @SuppressWarnings("UnusedDeclaration")
     public int getCodeDigits() {
         return codeDigits;
     }

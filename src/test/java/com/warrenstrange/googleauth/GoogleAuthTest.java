@@ -36,11 +36,8 @@ import org.junit.Test;
 
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -65,7 +62,6 @@ public class GoogleAuthTest
 {
 
     // Change this to the saved secret from the running the above test.
-    @SuppressWarnings("SpellCheckingInspection")
     private static final String SECRET_KEY = "KR52HV2U5Z4DWGLJ";
     private static final int VALIDATION_CODE = 598775;
 
@@ -204,8 +200,9 @@ public class GoogleAuthTest
     }
     
     @Test
-    public void syncTimeCheck()
+    public void syncTimeCheck() throws Exception
     {
+    	// server synchronized authenticator
         GoogleAuthenticatorConfigBuilder gacbServer =
                 new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
@@ -214,6 +211,8 @@ public class GoogleAuthTest
                         .setSyncUrl("https://www.google.com");
         GoogleAuthenticator gaServer = new GoogleAuthenticator(gacbServer.build());
         
+        URL google = new URL("https://www.google.com");
+        // local authenticator
         GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfigBuilder()
                         .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(30))
@@ -222,7 +221,7 @@ public class GoogleAuthTest
         GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
 
         int testServer = gaServer.getTotpPassword(SECRET_KEY);
-        int testLocal = ga.getTotpPassword(SECRET_KEY);
+        int testLocal = ga.getTotpPassword(SECRET_KEY, google.openConnection().getDate());
         assertEquals(testServer, testLocal);
     }
 }
