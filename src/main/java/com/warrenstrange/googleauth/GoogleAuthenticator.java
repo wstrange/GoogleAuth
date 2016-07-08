@@ -514,7 +514,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     public int getTotpPasswordOfUser(String userName)
     {
-        return getTotpPassword(userName, new Date().getTime());
+        return getTotpPasswordOfUser(userName, new Date().getTime());
     }
 
     public int getTotpPasswordOfUser(String userName, long time)
