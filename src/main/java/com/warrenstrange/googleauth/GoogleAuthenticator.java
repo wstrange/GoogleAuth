@@ -151,7 +151,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * Message Authentication Code). This implementation uses the SHA1 hash
      * function.
      */
-    private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
+    private static final String HMAC_HASH_FUNCTION = "HmacSHA256";
 
     /**
      * The configuration used by the current instance.
@@ -238,7 +238,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
         try
         {
-            // Getting an HmacSHA1 algorithm implementation from the JCE.
+            // Getting an HmacSHA256 algorithm implementation from the JCE.
             Mac mac = Mac.getInstance(HMAC_HASH_FUNCTION);
 
             // Initializing the MAC algorithm.
