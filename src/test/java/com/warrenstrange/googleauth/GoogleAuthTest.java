@@ -110,7 +110,8 @@ public class GoogleAuthTest
     public void rfc6238TestVectorsSHA256()
     {
         // See RFC 6238, p. 14
-        final String rfc6238TestKey = "3132333435363738393031323334353637383930313233343536373839303132";
+        final String rfc6238TestKey = "3132333435363738393031323334353637383930" +
+			"313233343536373839303132";
         final byte[] key = hexStr2Bytes(rfc6238TestKey);
         final long testTime[] = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
         final long testResults[] = {46119246, 68084774, 67062674, 91819424, 90698825, 77737706};
@@ -119,6 +120,30 @@ public class GoogleAuthTest
         GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
         cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
         cb.setHmacHashFunction(HmacHashFunction.HmacSHA256);
+        GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
+
+        for (int i = 0; i < testTime.length; ++i)
+        {
+            assertEquals(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds), testResults[i]);
+        }
+    }
+
+    @Test
+    public void rfc6238TestVectorsSHA512()
+    {
+        // See RFC 6238, p. 14
+        final String rfc6238TestKey = "3132333435363738393031323334353637383930" +
+			"3132333435363738393031323334353637383930" +
+			"3132333435363738393031323334353637383930" +
+			"31323334";
+        final byte[] key = hexStr2Bytes(rfc6238TestKey);
+        final long testTime[] = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
+        final long testResults[] = {90693936, 25091201, 99943326, 93441116, 38618901, 47863826};
+        final long timeStepSizeInSeconds = 30;
+
+        GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
+        cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
+        cb.setHmacHashFunction(HmacHashFunction.HmacSHA512);
         GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
 
         for (int i = 0; i < testTime.length; ++i)
