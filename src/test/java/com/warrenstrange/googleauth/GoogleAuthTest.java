@@ -169,8 +169,6 @@ public class GoogleAuthTest
     public void createCredentialsForUser()
     {
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
-		CredentialRepositoryMock credentialRepositoryMock = new CredentialRepositoryMock();
-		googleAuthenticator.setCredentialRepository(credentialRepositoryMock);
 
         final GoogleAuthenticatorKey key =
                 googleAuthenticator.createCredentials("testName");
@@ -216,8 +214,6 @@ public class GoogleAuthTest
                         .setWindowSize(5)
                         .setCodeDigits(6);
         GoogleAuthenticator ga = new GoogleAuthenticator(gacb.build());
-		CredentialRepositoryMock credentialRepositoryMock = new CredentialRepositoryMock();
-        ga.setCredentialRepository(credentialRepositoryMock);
 
         boolean isCodeValid = ga.authorizeUser("testName", VALIDATION_CODE);
 
