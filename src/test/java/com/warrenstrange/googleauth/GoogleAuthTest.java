@@ -90,6 +90,26 @@ public class GoogleAuthTest
     public void rfc6238TestVectors()
     {
         // See RFC 6238, p. 14
+        final String rfc6238TestKey = "3132333435363738393031323334353637383930";
+        final byte[] key = hexStr2Bytes(rfc6238TestKey);
+        final long testTime[] = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
+        final long testResults[] = {94287082, 7081804, 14050471, 89005924, 69279037, 65353130};
+        final long timeStepSizeInSeconds = 30;
+
+        GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
+        cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
+        GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
+
+        for (int i = 0; i < testTime.length; ++i)
+        {
+            assertEquals(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds), testResults[i]);
+        }
+    }
+
+    @Test
+    public void rfc6238TestVectorsSHA256()
+    {
+        // See RFC 6238, p. 14
         final String rfc6238TestKey = "3132333435363738393031323334353637383930313233343536373839303132";
         final byte[] key = hexStr2Bytes(rfc6238TestKey);
         final long testTime[] = {59L, 1111111109L, 1111111111L, 1234567890L, 2000000000L, 20000000000L};
@@ -98,6 +118,7 @@ public class GoogleAuthTest
 
         GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
         cb.setCodeDigits(8).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
+        cb.setHmacHashFunction(HmacHashFunction.HmacSHA256);
         GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
 
         for (int i = 0; i < testTime.length; ++i)
@@ -203,23 +224,4 @@ public class GoogleAuthTest
         System.out.println("Check VALIDATION_CODE = " + isCodeValid);
     }
 
-    //@Test
-    //public void fobTestVectors()
-    //{
-		//final String fobTestKey = "83ed921a0e503fa33f898ea4b46b589f";
-		//final byte[] key = hexStr2Bytes(fobTestKey);
-		//final long testTime[] = {1493919046734L, 1493919337427L};
-		//final long testResults[] = {666223, 000352};
-		//final long timeStepSizeInSeconds = 30;
-	//
-		//GoogleAuthenticatorConfigBuilder cb = new GoogleAuthenticatorConfigBuilder();
-		//cb.setCodeDigits(6).setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(timeStepSizeInSeconds));
-		//GoogleAuthenticator ga = new GoogleAuthenticator(cb.build());
-	//
-		//for (int i = 0; i < testTime.length; ++i)
-		//{
-		//	assertEquals(ga.calculateCode(key, testTime[i] / timeStepSizeInSeconds), testResults[i]);
-		//}
-	//
-    //}
 }
