@@ -38,6 +38,7 @@ public class GoogleAuthenticatorConfig {
     private int codeDigits = 6;
     private int keyModulus = (int) Math.pow(10, codeDigits);
     private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;
+    private HmacHashFunction hmacHashFunction = HmacHashFunction.HmacSHA1;
 
     /**
      * Returns the key module.
@@ -95,6 +96,18 @@ public class GoogleAuthenticatorConfig {
         return windowSize;
     }
 
+	/**
+	 * Returns the cryptographic hash function used to calculate the HMAC (Hash-based
+	 * Message Authentication Code). This implementation uses the SHA1 hash
+	 * function by default.
+	 * <p/>
+	 *
+	 * @return the HMAC hash function.
+	 */
+	public HmacHashFunction getHmacHashFunction() {
+		return hmacHashFunction;
+	}
+
     public static class GoogleAuthenticatorConfigBuilder {
         private GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig();
 
@@ -144,6 +157,15 @@ public class GoogleAuthenticatorConfig {
             }
 
             config.keyRepresentation = keyRepresentation;
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setHmacHashFunction(HmacHashFunction hmacHashFunction) {
+            if (hmacHashFunction == null) {
+                throw new IllegalArgumentException("HMAC Hash Function cannot be null.");
+            }
+
+            config.hmacHashFunction = hmacHashFunction;
             return this;
         }
     }
