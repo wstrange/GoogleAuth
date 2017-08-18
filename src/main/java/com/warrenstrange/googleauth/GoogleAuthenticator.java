@@ -332,7 +332,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         {
             case BASE32:
                 Base32 codec32 = new Base32();
-                return codec32.decode(secret);
+                // See: https://issues.apache.org/jira/browse/CODEC-234
+                // Commons Codec Base32::decode does not support lowercase letters.
+                return codec32.decode(secret.toUpperCase());
             case BASE64:
                 Base64 codec64 = new Base64();
                 return codec64.decode(secret);
