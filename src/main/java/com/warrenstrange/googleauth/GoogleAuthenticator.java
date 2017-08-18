@@ -147,13 +147,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
     /**
-     * Cryptographic hash function used to calculate the HMAC (Hash-based
-     * Message Authentication Code). This implementation uses the SHA1 hash
-     * function.
-     */
-    private static final String HMAC_HASH_FUNCTION = "HmacSHA1";
-
-    /**
      * The configuration used by the current instance.
      */
     private final GoogleAuthenticatorConfig config;
@@ -234,12 +227,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         }
 
         // Building the secret key specification for the HmacSHA1 algorithm.
-        SecretKeySpec signKey = new SecretKeySpec(key, HMAC_HASH_FUNCTION);
+        SecretKeySpec signKey = new SecretKeySpec(key, config.getHmacHashFunction().toString());
 
         try
         {
-            // Getting an HmacSHA1 algorithm implementation from the JCE.
-            Mac mac = Mac.getInstance(HMAC_HASH_FUNCTION);
+            // Getting an HmacSHA1/HmacSHA256 algorithm implementation from the JCE.
+            Mac mac = Mac.getInstance(config.getHmacHashFunction().toString());
 
             // Initializing the MAC algorithm.
             mac.init(signKey);
