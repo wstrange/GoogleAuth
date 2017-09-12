@@ -37,12 +37,12 @@ If you are using Maven:
     <dependency>
       <groupId>com.warrenstrange</groupId>
       <artifactId>googleauth</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
     </dependency>
 
 If you are using Gradle:
 
-     compile 'com.warrenstrange:googleauth:1.1.1'
+     compile 'com.warrenstrange:googleauth:1.1.2'
 
 The required libraries will be automatically pulled into your project:
 
