@@ -134,6 +134,36 @@ public final class GoogleAuthenticatorQRGenerator {
     }
 
     /**
+     * Returns the URL of a Google Chart API call to generate a QR barcode to
+     * be loaded into the Google Authenticator application.  The user scans this
+     * bar code with the application on their smart phones or enters the
+     * secret manually.
+     * <p/>
+     * The current implementation supports the following features:
+     * <ul>
+     * <li>Label, made up of an optional issuer and an account name.</li>
+     * <li>Secret parameter.</li>
+     * <li>Issuer parameter.</li>
+     * </ul>
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param key The secret key from {@link GoogleAuthenticatorKey}. Useful for regenerating the QR code once you've
+     *            persisted the secret.
+     * @return the Google Chart API call URL to generate a QR code containing
+     * the provided information.
+     * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
+     */
+    public static String getOtpAuthURL(String issuer,
+                                       String accountName,
+                                       String key) {
+        return String.format(
+                TOTP_URI_FORMAT,
+                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, key)));
+    }
+
+    /**
      * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
      * Use a secure transport since this URI contains the secret.
      * <p/>
@@ -155,11 +185,36 @@ public final class GoogleAuthenticatorQRGenerator {
                                            String accountName,
                                            GoogleAuthenticatorKey credentials) {
         
+        return getOtpAuthTotpURL(issuer, accountName, credentials.getKey());
+    }
+
+    /**
+     * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
+     * Use a secure transport since this URI contains the secret.
+     * <p/>
+     * The current implementation supports the following features:
+     * <ul>
+     * <li>Label, made up of an optional issuer and an account name.</li>
+     * <li>Secret parameter.</li>
+     * <li>Issuer parameter.</li>
+     * </ul>
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param key The secret key from {@link GoogleAuthenticatorKey}. Useful for regenerating the QR code once you've
+     *            persisted the secret.
+     * @return an otpauth scheme URI for loading into a client application.
+     * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
+     */
+    public static String getOtpAuthTotpURL(String issuer,
+                                           String accountName,
+                                           String key) {
         URIBuilder uri = new URIBuilder()
-            .setScheme("otpauth")
-            .setHost("totp")
-            .setPath("/" + formatLabel(issuer, accountName))
-            .setParameter("secret", credentials.getKey());
+                .setScheme("otpauth")
+                .setHost("totp")
+                .setPath("/" + formatLabel(issuer, accountName))
+                .setParameter("secret", key);
 
 
         if (issuer != null) {
@@ -169,17 +224,8 @@ public final class GoogleAuthenticatorQRGenerator {
 
             uri.setParameter("issuer", issuer);
         }
-        
-        /*
-            The following parameters aren't needed since they are all defaults.
-            We can exclude them to make the URI shorter.
-         */
-        // uri.setParameter("algorithm", "SHA1");
-        // uri.setParameter("digits", "6");
-        // uri.setParameter("period", "30");
-        
-        return uri.toString();
 
+        return uri.toString();
     }
     
 }
