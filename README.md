@@ -198,7 +198,7 @@ ticket on [github][githubIssues].
 
 Copyright (c) 2013 Warren Strange
 
-Copyright (c) 2014-2015 Enrico M. Crisostomo
+Copyright (c) 2014-2017 Enrico M. Crisostomo
 
 All rights reserved.
 
