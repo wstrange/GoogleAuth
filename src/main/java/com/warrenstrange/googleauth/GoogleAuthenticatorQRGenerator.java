@@ -95,6 +95,7 @@ public final class GoogleAuthenticatorQRGenerator
         }
 
         StringBuilder sb = new StringBuilder();
+
         if (issuer != null)
         {
             if (issuer.contains(":"))
@@ -164,13 +165,11 @@ public final class GoogleAuthenticatorQRGenerator
                                            String accountName,
                                            GoogleAuthenticatorKey credentials)
     {
-
         URIBuilder uri = new URIBuilder()
                 .setScheme("otpauth")
                 .setHost("totp")
                 .setPath("/" + formatLabel(issuer, accountName))
                 .setParameter("secret", credentials.getKey());
-
 
         if (issuer != null)
         {
@@ -191,7 +190,5 @@ public final class GoogleAuthenticatorQRGenerator
         // uri.setParameter("period", "30");
 
         return uri.toString();
-
     }
-
 }
