@@ -365,6 +365,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         List<Integer> scratchCodes = calculateScratchCodes(buffer);
 
         return new GoogleAuthenticatorKey(
+                config,
                 generatedKey,
                 validationCode,
                 scratchCodes);

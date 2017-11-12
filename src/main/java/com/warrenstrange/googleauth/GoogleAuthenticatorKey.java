@@ -50,6 +50,11 @@ import java.util.List;
 public final class GoogleAuthenticatorKey
 {
     /**
+     * The configuration of this key.
+     */
+    private final GoogleAuthenticatorConfig config;
+
+    /**
      * The secret key in Base32 encoding.
      */
     private final String key;
@@ -67,12 +72,17 @@ public final class GoogleAuthenticatorKey
     /**
      * The constructor with package visibility.
      *
+     * @param config
      * @param secretKey    the secret key in Base32 encoding.
      * @param code         the verification code at time = 0 (the UNIX epoch).
      * @param scratchCodes the list of scratch codes.
      */
-    /* package */ GoogleAuthenticatorKey(String secretKey, int code, List<Integer> scratchCodes)
+    /* package */ GoogleAuthenticatorKey(GoogleAuthenticatorConfig config,
+                                         String secretKey,
+                                         int code,
+                                         List<Integer> scratchCodes)
     {
+        this.config = config;
         key = secretKey;
         verificationCode = code;
         this.scratchCodes = new ArrayList<>(scratchCodes);
@@ -86,6 +96,16 @@ public final class GoogleAuthenticatorKey
     public List<Integer> getScratchCodes()
     {
         return scratchCodes;
+    }
+
+    /**
+     * Get the config of this key.
+     *
+     * @return the config of this key.
+     */
+    public GoogleAuthenticatorConfig getConfig()
+    {
+        return config;
     }
 
     /**
