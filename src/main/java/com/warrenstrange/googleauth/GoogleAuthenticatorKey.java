@@ -43,9 +43,9 @@ import java.util.List;
  * library.
  *
  * @author Enrico M. Crisostomo
- * @version 1.0
+ * @version 1.2.0
  * @see GoogleAuthenticator
- * @since 1.0
+ * @since 1.0.0
  */
 public final class GoogleAuthenticatorKey
 {
