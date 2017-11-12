@@ -159,7 +159,7 @@ public final class GoogleAuthenticatorQRGenerator
      * @param accountName The account name. This parameter shall not be null.
      * @param credentials The generated credentials.  This parameter shall not be null.
      * @return an otpauth scheme URI for loading into a client application.
-     * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
+     * @see <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">Google Authenticator - KeyUriFormat</a>
      */
     public static String getOtpAuthTotpURL(String issuer,
                                            String accountName,
@@ -180,15 +180,30 @@ public final class GoogleAuthenticatorQRGenerator
 
             uri.setParameter("issuer", issuer);
         }
-        
-        /*
-            The following parameters aren't needed since they are all defaults.
-            We can exclude them to make the URI shorter.
-         */
-        // uri.setParameter("algorithm", "SHA1");
-        // uri.setParameter("digits", "6");
-        // uri.setParameter("period", "30");
+
+        final GoogleAuthenticatorConfig config = credentials.getConfig();
+        uri.setParameter("algorithm", getAlgorithmName(config.getHmacHashFunction()));
+        uri.setParameter("digits", String.valueOf(config.getCodeDigits()));
+        uri.setParameter("period", String.valueOf((int) (config.getTimeStepSizeInMillis() / 1000)));
 
         return uri.toString();
+    }
+
+    private static String getAlgorithmName(HmacHashFunction hashFunction)
+    {
+        switch (hashFunction)
+        {
+            case HmacSHA1:
+                return "SHA1";
+
+            case HmacSHA256:
+                return "SHA256";
+
+            case HmacSHA512:
+                return "SHA512";
+
+            default:
+                throw new IllegalArgumentException(String.format("Unknown algorithm %s", hashFunction));
+        }
     }
 }
