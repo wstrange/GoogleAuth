@@ -43,7 +43,7 @@ import java.util.List;
  * library.
  *
  * @author Enrico M. Crisostomo
- * @version 1.2.0
+ * @version 1.1.3
  * @see GoogleAuthenticator
  * @since 1.0.0
  */
