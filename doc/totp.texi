@@ -689,6 +689,9 @@ represent a newly-created set of credentials.  Currently, this class publishes
 the following read-only properties:
 
 @table @command
+@item GoogleAuthenticatorCofig config
+The @acronym{TOTP} configuration of this key.
+
 @item String key
 The shared secret.
 
@@ -702,20 +705,64 @@ The verification code, that is, the @acronym{TOTP} password when at time-step 0
 
 @end table
 
+@subsection @command{GoogleAuthenticatorKey.Builder}
+Instances of @command{GoogleAuthenticatorKey} can only be built using
+@command{GoogleAuthenticatorKey.Builder} instances.  The builder
+publishes all the properties of the @command{GoogleAuthenticatorKey}
+class.  The following fragment, for example, builds an instance with the
+following characteristics:
+
+@itemize
+@item
+It has a default @command{GoogleAuthenticatorConfig}.
+
+@item
+It has the following secret key: @command{secretKey}.
+
+@item
+It has the following verification code: @command{123456}.
+
+@item
+It has an empty list of scratch codes.
+@end itemize
+
+@example
+GoogleAuthenticatorConfig config =
+  new GoogleAuthenticatorConfig
+    .GoogleAuthenticatorConfigBuilder()
+    .build();
+
+GoogleAuthenticatorKey credentials =
+  new GoogleAuthenticatorKey
+    .Builder("secretKey")
+    .setConfig(config)
+    .setVerificationCode(123456)
+    .setScratchCodes(new ArrayList<Integer>())
+    .build();
+@end example
+
+Manually building instances of this class is generally useful to
+re-create @acronym{QR} codes for an existing key.
+
 @section @command{GoogleAuthenticatorQRGenerator}
-This class is a helper class which provides a way to generate @acronym{QR} codes
-using the Google Chart @acronym{API}.  Please note that the usage of this method
-is subject to the license and usage restrinctions of the Google Chart
-@acronym{API}.
+This class is a helper class which provides a way to generate
+@acronym{QR} codes using the Google Chart @acronym{API}.  Please note
+that the usage of this method is subject to the license and usage
+restrinctions of the Google Chart @acronym{API}.
 
 This class publishes the following method:
 
 @table @command
 @item static String getOtpAuthURL(String issuer, String accountName, GoogleAuthenticatorKey credentials)
-Returns the URL of a Google Chart @acronym{API} call to generate a @acronym{QR}
-barcode to be loaded into the Google Authenticator application.  The user scans
-this bar code with the application on their smart phones or enters the secret
-manually.
+Returns the @acronym{URL} of a Google Chart @acronym{API} call to
+generate a @acronym{QR} barcode to be loaded into the Google
+Authenticator application.  The user scans this bar code with the
+application on their smart phones or enters the secret manually.
+
+@item static String getOtpAuthTotpURL(String issuer, String accountName, GoogleAuthenticatorKey credentials)
+Returns the key @acronym{URI}, that is a @command{otpauth://}
+@acronym{URL} as specified by the key @acronym{URI} format, to be loaded
+in compliant applications.
 @end table
 
 @noindent
