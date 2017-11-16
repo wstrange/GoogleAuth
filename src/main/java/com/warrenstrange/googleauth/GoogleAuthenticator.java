@@ -364,11 +364,13 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         // Calculate scratch codes
         List<Integer> scratchCodes = calculateScratchCodes(buffer);
 
-        return new GoogleAuthenticatorKey(
-                config,
-                generatedKey,
-                validationCode,
-                scratchCodes);
+        return
+                new GoogleAuthenticatorKey
+                        .Builder(generatedKey)
+                        .setConfig(config)
+                        .setVerificationCode(validationCode)
+                        .setScratchCodes(scratchCodes)
+                        .build();
     }
 
     @Override

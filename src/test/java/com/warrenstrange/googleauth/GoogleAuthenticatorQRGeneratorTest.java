@@ -48,7 +48,13 @@ public class GoogleAuthenticatorQRGeneratorTest
         GoogleAuthenticatorConfig config =
                 new GoogleAuthenticatorConfig.GoogleAuthenticatorConfigBuilder()
                         .build();
-        credentials = new GoogleAuthenticatorKey(config, "secretKey", 123456, new ArrayList<Integer>());
+        credentials =
+                new GoogleAuthenticatorKey
+                        .Builder("secretKey")
+                        .setConfig(config)
+                        .setVerificationCode(123456)
+                        .setScratchCodes(new ArrayList<Integer>())
+                        .build();
     }
 
     @Test
