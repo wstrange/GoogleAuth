@@ -72,19 +72,29 @@ public final class GoogleAuthenticatorKey
     /**
      * The constructor with package visibility.
      *
-     * @param config
-     * @param secretKey    the secret key in Base32 encoding.
-     * @param code         the verification code at time = 0 (the UNIX epoch).
-     * @param scratchCodes the list of scratch codes.
+     * @param config           the configuration of the TOTP algorithm.
+     * @param key              the secret key in Base32 encoding.
+     * @param verificationCode the verification code at time = 0 (the UNIX epoch).
+     * @param scratchCodes     the list of scratch codes.
      */
     /* package */ GoogleAuthenticatorKey(GoogleAuthenticatorConfig config,
-                                         String secretKey,
-                                         int code,
+                                         String key,
+                                         int verificationCode,
                                          List<Integer> scratchCodes)
     {
+        if (key == null)
+        {
+            throw new IllegalArgumentException("Key cannot be null");
+        }
+
+        if (config == null)
+        {
+            throw new IllegalArgumentException("Configuration cannot be null");
+        }
+
         this.config = config;
-        key = secretKey;
-        verificationCode = code;
+        this.key = key;
+        this.verificationCode = verificationCode;
         this.scratchCodes = new ArrayList<>(scratchCodes);
     }
 
@@ -126,5 +136,82 @@ public final class GoogleAuthenticatorKey
     public int getVerificationCode()
     {
         return verificationCode;
+    }
+
+    /**
+     * This class is a builder to create instances of the {@link GoogleAuthenticatorKey} class.
+     */
+    public static class Builder
+    {
+        private GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig();
+        private String key;
+        private int verificationCode;
+        private List<Integer> scratchCodes;
+
+        /**
+         * Creates an instance of the builder.
+         *
+         * @param key the secret key in Base32 encoding.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public Builder(String key)
+        {
+            this.key = key;
+        }
+
+        /**
+         * Creates an instance of the {@link GoogleAuthenticatorKey} class.
+         *
+         * @return an instance of the {@link GoogleAuthenticatorKey} class initialized with the properties set in this builder.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public GoogleAuthenticatorKey build()
+        {
+            return new GoogleAuthenticatorKey(config, key, verificationCode, scratchCodes);
+        }
+
+        /**
+         * Sets the config of the TOTP algorithm for this key.
+         *
+         * @param config the config of the TOTP algorithm for this key.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public void setConfig(GoogleAuthenticatorConfig config)
+        {
+            this.config = config;
+        }
+
+        /**
+         * Sets the secret key.
+         *
+         * @param key the secret key.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public void setKey(String key)
+        {
+            this.key = key;
+        }
+
+        /**
+         * Sets the verification code.
+         *
+         * @param verificationCode the verification code.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public void setVerificationCode(int verificationCode)
+        {
+            this.verificationCode = verificationCode;
+        }
+
+        /**
+         * Sets the scratch codes.
+         *
+         * @param scratchCodes the scratch codes.
+         * @see GoogleAuthenticatorKey#GoogleAuthenticatorKey(GoogleAuthenticatorConfig, String, int, List)
+         */
+        public void setScratchCodes(List<Integer> scratchCodes)
+        {
+            this.scratchCodes = scratchCodes;
+        }
     }
 }
