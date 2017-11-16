@@ -67,7 +67,7 @@ import java.util.logging.Logger;
  *
  * @author Enrico M. Crisostomo
  * @author Warren Strange
- * @version 0.5.0
+ * @version 1.1.4
  * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
  * @see <a href="http://code.google.com/p/google-authenticator" />
  * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
