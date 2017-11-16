@@ -144,6 +144,38 @@ public final class GoogleAuthenticatorQRGenerator
     }
 
     /**
+     * Returns the URL of a Google Chart API call to generate a QR barcode to
+     * be loaded into the Google Authenticator application.  The user scans this
+     * bar code with the application on their smart phones or enters the
+     * secret manually.
+     * <p/>
+     * The current implementation supports the following features:
+     * <ul>
+     * <li>Label, made up of an optional issuer and an account name.</li>
+     * <li>Secret parameter.</li>
+     * <li>Issuer parameter.</li>
+     * </ul>
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param key user's secret key. This parameter shall not be null.
+     * @param config configuration for the secret key. This parameter shall not be null.
+     * @return the Google Chart API call URL to generate a QR code containing
+     * the provided information.
+     * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
+     */
+    public static String getOtpAuthURL(String issuer,
+                                       String accountName,
+                                       String key,
+                                       GoogleAuthenticatorConfig config) {
+        return String.format(
+                TOTP_URI_FORMAT,
+                internalURLEncode(getOtpAuthTotpURL(issuer, accountName, key, config)));
+
+    }
+
+    /**
      * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
      * Use a secure transport since this URI contains the secret.
      * <p/>
@@ -165,11 +197,38 @@ public final class GoogleAuthenticatorQRGenerator
                                            String accountName,
                                            GoogleAuthenticatorKey credentials)
     {
+        return getOtpAuthTotpURL(issuer, accountName, credentials.getKey(), credentials.getConfig());
+    }
+
+    /**
+     * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
+     * Use a secure transport since this URI contains the secret.
+     * <p/>
+     * The current implementation supports the following features:
+     * <ul>
+     * <li>Label, made up of an optional issuer and an account name.</li>
+     * <li>Secret parameter.</li>
+     * <li>Issuer parameter.</li>
+     * </ul>
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param key user's secret key. This parameter shall not be null.
+     * @param config configuration for the secret key. This parameter shall not be null.
+     * @return an otpauth scheme URI for loading into a client application.
+     * @see <a href="https://github.com/google/google-authenticator/wiki/Key-Uri-Format">Google Authenticator - KeyUriFormat</a>
+     */
+    public static String getOtpAuthTotpURL(String issuer,
+                                           String accountName,
+                                           String key,
+                                           GoogleAuthenticatorConfig config)
+    {
         URIBuilder uri = new URIBuilder()
                 .setScheme("otpauth")
                 .setHost("totp")
                 .setPath("/" + formatLabel(issuer, accountName))
-                .setParameter("secret", credentials.getKey());
+                .setParameter("secret", key);
 
         if (issuer != null)
         {
@@ -181,12 +240,12 @@ public final class GoogleAuthenticatorQRGenerator
             uri.setParameter("issuer", issuer);
         }
 
-        final GoogleAuthenticatorConfig config = credentials.getConfig();
         uri.setParameter("algorithm", getAlgorithmName(config.getHmacHashFunction()));
         uri.setParameter("digits", String.valueOf(config.getCodeDigits()));
         uri.setParameter("period", String.valueOf((int) (config.getTimeStepSizeInMillis() / 1000)));
 
         return uri.toString();
+
     }
 
     private static String getAlgorithmName(HmacHashFunction hashFunction)
