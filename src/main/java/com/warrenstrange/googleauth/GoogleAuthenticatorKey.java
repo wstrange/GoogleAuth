@@ -92,6 +92,11 @@ public final class GoogleAuthenticatorKey
             throw new IllegalArgumentException("Configuration cannot be null");
         }
 
+        if (scratchCodes == null)
+        {
+            throw new IllegalArgumentException("Scratch codes cannot be null");
+        }
+
         this.config = config;
         this.key = key;
         this.verificationCode = verificationCode;
@@ -146,7 +151,7 @@ public final class GoogleAuthenticatorKey
         private GoogleAuthenticatorConfig config = new GoogleAuthenticatorConfig();
         private String key;
         private int verificationCode;
-        private List<Integer> scratchCodes;
+        private List<Integer> scratchCodes = new ArrayList<>();
 
         /**
          * Creates an instance of the builder.
