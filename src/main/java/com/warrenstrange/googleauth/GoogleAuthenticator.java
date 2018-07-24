@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Enrico M. Crisostomo
+ * Copyright (c) 2014-2018 Enrico M. Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -101,12 +101,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * 80 bits (10 bytes) to generate a 16 bytes Base32-encoded secret key.
      */
     private static final int SECRET_BITS = 80;
-
-    /**
-     * Number of scratch codes to generate during the key generation.
-     * We are using Google's default of providing 5 scratch codes.
-     */
-    private static final int SCRATCH_CODES = 5;
 
     /**
      * Number of digits of a scratch code represented as a decimal integer.
@@ -271,8 +265,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
 
             // We're not disclosing internal error details to our clients.
-            throw new GoogleAuthenticatorException("The operation cannot be "
-                    + "performed now.");
+            throw new GoogleAuthenticatorException("The operation cannot be performed now.");
         }
     }
 
@@ -346,11 +339,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     @Override
     public GoogleAuthenticatorKey createCredentials()
     {
-
         // Allocating a buffer sufficiently large to hold the bytes required by
         // the secret key and the scratch codes.
-        byte[] buffer =
-                new byte[SECRET_BITS / 8 + SCRATCH_CODES * BYTES_PER_SCRATCH_CODE];
+        byte[] buffer = new byte[SECRET_BITS / 8];
 
         secureRandom.nextBytes(buffer);
 
@@ -362,7 +353,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         int validationCode = calculateValidationCode(secretKey);
 
         // Calculate scratch codes
-        List<Integer> scratchCodes = calculateScratchCodes(buffer);
+        List<Integer> scratchCodes = calculateScratchCodes();
 
         return
                 new GoogleAuthenticatorKey
@@ -394,27 +385,13 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         return key;
     }
 
-    private List<Integer> calculateScratchCodes(byte[] buffer)
+    private List<Integer> calculateScratchCodes()
     {
-        List<Integer> scratchCodes = new ArrayList<>();
+        final List<Integer> scratchCodes = new ArrayList<>();
 
-        while (scratchCodes.size() < SCRATCH_CODES)
+        for (int i = 0; i < config.getNumberOfScratchCodes(); ++i)
         {
-            byte[] scratchCodeBuffer = Arrays.copyOfRange(
-                    buffer,
-                    SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size(),
-                    SECRET_BITS / 8 + BYTES_PER_SCRATCH_CODE * scratchCodes.size() + BYTES_PER_SCRATCH_CODE);
-
-            int scratchCode = calculateScratchCode(scratchCodeBuffer);
-
-            if (scratchCode != SCRATCH_CODE_INVALID)
-            {
-                scratchCodes.add(scratchCode);
-            }
-            else
-            {
-                scratchCodes.add(generateScratchCode());
-            }
+            scratchCodes.add(generateScratchCode());
         }
 
         return scratchCodes;

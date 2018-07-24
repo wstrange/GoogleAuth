@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Enrico M. Crisostomo
+ * Copyright (c) 2014-2018 Enrico M. Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@ public class GoogleAuthenticatorConfig
     private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);
     private int windowSize = 3;
     private int codeDigits = 6;
+    private int numberOfScratchCodes = 5;
     private int keyModulus = (int) Math.pow(10, codeDigits);
     private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;
     private HmacHashFunction hmacHashFunction = HmacHashFunction.HmacSHA1;
@@ -70,6 +71,16 @@ public class GoogleAuthenticatorConfig
     public int getCodeDigits()
     {
         return codeDigits;
+    }
+
+    /**
+     * Returns the number of scratch codes to generate.  We are using Google's default of providing 5 scratch codes.
+     *
+     * @return the number of scratch codes to generate.
+     */
+    public int getNumberOfScratchCodes()
+    {
+        return numberOfScratchCodes;
     }
 
     /**
@@ -143,6 +154,22 @@ public class GoogleAuthenticatorConfig
 
             config.codeDigits = codeDigits;
             config.keyModulus = (int) Math.pow(10, codeDigits);
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setNumberOfScratchCodes(int numberOfScratchCodes)
+        {
+            if (numberOfScratchCodes < 1)
+            {
+                throw new IllegalArgumentException("The minimum number of scratch codes is 1");
+            }
+
+            if (numberOfScratchCodes > 1_000)
+            {
+                throw new IllegalArgumentException("The maximum number of scratch codes is 1000");
+            }
+
+            config.numberOfScratchCodes = numberOfScratchCodes;
             return this;
         }
 

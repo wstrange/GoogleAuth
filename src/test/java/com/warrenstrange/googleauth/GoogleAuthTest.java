@@ -157,7 +157,8 @@ public class GoogleAuthTest
     {
         GoogleAuthenticatorConfigBuilder gacb =
                 new GoogleAuthenticatorConfigBuilder()
-                        .setKeyRepresentation(KeyRepresentation.BASE64);
+                        .setKeyRepresentation(KeyRepresentation.BASE64)
+                        .setNumberOfScratchCodes(10);
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator(gacb.build());
 
         final GoogleAuthenticatorKey key =

@@ -20,7 +20,7 @@
 This manual is for the Java @acronym{TOTP} server library (version
 @value{VERSION}, @value{UPDATED}).
 
-Copyright @copyright{} 2013-2017 Enrico M. Crisostomo
+Copyright @copyright{} 2013-2018 Enrico M. Crisostomo
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -666,6 +666,9 @@ current time.
 @item
 It validates and creates TOTP passwords of 8 digits.
 
+@item
+It requests 10 scratch codes.
+
 @end itemize
 
 @example
@@ -673,7 +676,8 @@ GoogleAuthenticatorConfigBuilder gacb =
   new GoogleAuthenticatorConfigBuilder()
     .setTimeStepSizeInMillis(TimeUnit.SECONDS.toMillis(60))
     .setWindowSize(5)
-    .setCodeDigits(8);
+    .setCodeDigits(8)
+    .setNumberOfScratchCodes(10);
 GoogleAuthenticator ga =
   new GoogleAuthenticator(gacb.build());
 @end example
@@ -696,8 +700,9 @@ The @acronym{TOTP} configuration of this key.
 The shared secret.
 
 @item List<Integer> scratchCodes
-A list of scratch codes.  Currently, 5 scratch codes are provided and there is
-no way to generate others without creating a new credential.
+A list of scratch codes.  By default, 5 scratch codes are provided.
+There currently is no way to generate scratch codes without creating a
+new credential.
 
 @item int verificationCode
 The verification code, that is, the @acronym{TOTP} password when at time-step 0
