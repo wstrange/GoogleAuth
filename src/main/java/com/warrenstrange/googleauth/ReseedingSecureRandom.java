@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017 Enrico M. Crisostomo
+ * Copyright (c) 2014-2018 Enrico M. Crisostomo
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,12 +35,6 @@ import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Date: 08/04/14
- * Time: 15:21
- *
- * @author Enrico M. Crisostomo
- */
 class ReseedingSecureRandom
 {
     private static final int MAX_OPERATIONS = 1_000_000;
