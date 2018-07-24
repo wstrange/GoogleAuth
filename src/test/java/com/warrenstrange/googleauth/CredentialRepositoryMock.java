@@ -37,7 +37,8 @@ import java.util.List;
  *
  * @author Enrico M. Crisostomo
  */
-public class CredentialRepositoryMock implements ICredentialRepository {
+public class CredentialRepositoryMock implements ICredentialRepository
+{
     /**
      * Name of the environment property used by this mock to retrieve the fake
      * secret key returned by <code>#getSecretKey</code>.
@@ -54,7 +55,8 @@ public class CredentialRepositoryMock implements ICredentialRepository {
      * <code>#MOCK_SECRET_KEY_NAME</code>.
      */
     @Override
-    public String getSecretKey(String userName) {
+    public String getSecretKey(String userName)
+    {
         final String key = System.getProperty(MOCK_SECRET_KEY_NAME);
 
         System.out.println(
@@ -69,17 +71,18 @@ public class CredentialRepositoryMock implements ICredentialRepository {
     /**
      * This method does nothing.
      *
-     * @param userName the user whose data shall be saved.
-     * @param secretKey the generated key.
+     * @param userName       the user whose data shall be saved.
+     * @param secretKey      the generated key.
      * @param validationCode the validation code.
-     * @param scratchCodes the list of scratch codes.
+     * @param scratchCodes   the list of scratch codes.
      */
     @Override
     public void saveUserCredentials(
             String userName,
             String secretKey,
             int validationCode,
-            List<Integer> scratchCodes) {
+            List<Integer> scratchCodes)
+    {
         System.out.println("saveUserCredentials invoked with user name " + userName);
     }
 }
