@@ -41,7 +41,7 @@ class ReseedingSecureRandom
     private final String provider;
     private final String algorithm;
     private final AtomicInteger count = new AtomicInteger(0);
-    private SecureRandom secureRandom;
+    private volatile SecureRandom secureRandom;
 
     @SuppressWarnings("UnusedDeclaration")
     ReseedingSecureRandom()
