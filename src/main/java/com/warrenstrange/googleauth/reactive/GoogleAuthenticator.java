@@ -28,10 +28,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.warrenstrange.googleauth;
+package com.warrenstrange.googleauth.reactive;
 
 import java.util.Date;
 import java.util.ServiceLoader;
+
+import com.warrenstrange.googleauth.BaseGoogleAuthenticator;
+import com.warrenstrange.googleauth.GoogleAuthenticatorConfig;
+import com.warrenstrange.googleauth.GoogleAuthenticatorException;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
+import reactor.core.publisher.Mono;
 
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
@@ -83,7 +89,7 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
     }
 
     @Override
-    public GoogleAuthenticatorKey createCredentials(String userName)
+    public Mono<GoogleAuthenticatorKey> createCredentials(String userName)
     {
         // Further validation will be performed by the configured provider.
         if (userName == null)
@@ -94,42 +100,46 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
         GoogleAuthenticatorKey key = createCredentials();
 
         ICredentialRepository repository = getValidCredentialRepository();
-        repository.saveUserCredentials(
+        return repository
+            .saveUserCredentials(
                 userName,
                 key.getKey(),
                 key.getVerificationCode(),
-                key.getScratchCodes());
-
-        return key;
+                key.getScratchCodes()
+            )
+            .thenReturn(key);
     }
 
-    public int getTotpPasswordOfUser(String userName)
+    public Mono<Integer> getTotpPasswordOfUser(String userName)
     {
         return getTotpPasswordOfUser(userName, new Date().getTime());
     }
 
-    public int getTotpPasswordOfUser(String userName, long time)
+    public Mono<Integer> getTotpPasswordOfUser(String userName, long time)
     {
         ICredentialRepository repository = getValidCredentialRepository();
 
-        return calculateCode(
-                decodeSecret(repository.getSecretKey(userName)),
-                getTimeWindowFromTime(time));
+        return repository.getSecretKey(userName)
+                         .map(sc -> calculateCode(
+                             decodeSecret(sc),
+                             getTimeWindowFromTime(time)
+                         ));
     }
 
     @Override
-    public boolean authorizeUser(String userName, int verificationCode)
+    public Mono<Boolean> authorizeUser(String userName, int verificationCode)
             throws GoogleAuthenticatorException
     {
         return authorizeUser(userName, verificationCode, new Date().getTime());
     }
 
     @Override
-    public boolean authorizeUser(String userName, int verificationCode, long time) throws GoogleAuthenticatorException
+    public Mono<Boolean> authorizeUser(String userName, int verificationCode, long time)
     {
         ICredentialRepository repository = getValidCredentialRepository();
 
-        return authorize(repository.getSecretKey(userName), verificationCode, time);
+        return repository.getSecretKey(userName)
+                         .map(sc -> authorize(sc, verificationCode, time));
     }
 
     /**
@@ -137,7 +147,7 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
      * registered using the Java service loader API.
      *
      * @return the first registered ICredentialRepository.
-     * @throws java.lang.UnsupportedOperationException if no valid service is
+     * @throws UnsupportedOperationException if no valid service is
      *                                                 found.
      */
     private ICredentialRepository getValidCredentialRepository()

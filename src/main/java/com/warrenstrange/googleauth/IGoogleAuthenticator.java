@@ -51,19 +51,6 @@ public interface IGoogleAuthenticator
     GoogleAuthenticatorKey createCredentials();
 
     /**
-     * This method generates a new set of credentials invoking the
-     * <code>#createCredentials</code> method with no arguments. The generated
-     * credentials are then saved using the configured
-     * <code>#ICredentialRepository</code> service.
-     * <p/>
-     * The user must register this secret on their device.
-     *
-     * @param userName the user name.
-     * @return secret key
-     */
-    GoogleAuthenticatorKey createCredentials(String userName);
-
-    /**
      * This method generates the current TOTP password.
      *
      * @param secret the encoded secret key.
@@ -81,25 +68,6 @@ public interface IGoogleAuthenticator
      * @since 1.1.0
      */
     int getTotpPassword(String secret, long time);
-
-    /**
-     * This method generates the current TOTP password.
-     *
-     * @param userName The user whose password must be created.
-     * @return the current TOTP password.
-     * @since 1.1.0
-     */
-    int getTotpPasswordOfUser(String userName);
-
-    /**
-     * This method generates the TOTP password at the specified time.
-     *
-     * @param userName The user whose password must be created.
-     * @param time     The time to use to calculate the password.
-     * @return the TOTP password at the specified time.
-     * @since 1.1.0
-     */
-    int getTotpPasswordOfUser(String userName, long time);
 
     /**
      * Checks a verification code against a secret key using the current time.
@@ -140,61 +108,4 @@ public interface IGoogleAuthenticator
      */
     boolean authorize(String secret, int verificationCode, long time)
             throws GoogleAuthenticatorException;
-
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository using
-     * the current time.  This method delegates the validation to the
-     * {@link #authorizeUser(String, int, long)}.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if an unexpected error occurs.
-     * @see #authorize(String, int)
-     */
-    boolean authorizeUser(String userName, int verificationCode)
-            throws GoogleAuthenticatorException;
-
-    /**
-     * This method validates a verification code of the specified user whose
-     * private key is retrieved from the configured credential repository.  This
-     * method delegates the validation to the
-     * {@link #authorize(String, int, long)} method.
-     *
-     * @param userName         The user whose verification code is to be
-     *                         validated.
-     * @param verificationCode The validation code.
-     * @param time             The time to use to calculate the TOTP password.
-     * @return <code>true</code> if the validation code is valid,
-     * <code>false</code> otherwise.
-     * @throws GoogleAuthenticatorException if an unexpected error occurs.
-     * @see #authorize(String, int)
-     * @since 0.6.0
-     */
-    boolean authorizeUser(String userName, int verificationCode, long time)
-            throws GoogleAuthenticatorException;
-
-    /**
-     * This method returns the credential repository used by this instance, or
-     * {@code null} if none is set or none can be found using the ServiceLoader
-     * API.
-     *
-     * @return the credential repository used by this instance.
-     * @since 1.0.0
-     */
-    ICredentialRepository getCredentialRepository();
-
-    /**
-     * This method sets the credential repository used by this instance.  If
-     * {@code null} is passed to this method, no credential repository will be
-     * used, nor discovered using the ServiceLoader API.
-     *
-     * @param repository The credential repository to use, or {@code null} to
-     *                   disable this feature.
-     * @since 1.0.0
-     */
-    void setCredentialRepository(ICredentialRepository repository);
 }
