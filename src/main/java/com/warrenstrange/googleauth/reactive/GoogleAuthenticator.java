@@ -31,6 +31,7 @@
 package com.warrenstrange.googleauth.reactive;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.ServiceLoader;
 
 import com.warrenstrange.googleauth.BaseGoogleAuthenticator;
@@ -38,6 +39,8 @@ import com.warrenstrange.googleauth.GoogleAuthenticatorConfig;
 import com.warrenstrange.googleauth.GoogleAuthenticatorException;
 import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This class implements the functionality described in RFC 6238 (TOTP: Time
@@ -76,6 +79,7 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
 {
 
     private ICredentialRepository credentialRepository;
+    private Scheduler scheduler = Schedulers.parallel();
     private boolean credentialRepositorySearched;
 
     public GoogleAuthenticator()
@@ -91,23 +95,26 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
     @Override
     public Mono<GoogleAuthenticatorKey> createCredentials(String userName)
     {
-        // Further validation will be performed by the configured provider.
-        if (userName == null)
-        {
-            throw new IllegalArgumentException("User name cannot be null.");
-        }
+        return Mono
+            .defer(() -> {
+                // Further validation will be performed by the configured provider.
+                if (userName == null) {
+                    throw new IllegalArgumentException("User name cannot be null.");
+                }
 
-        GoogleAuthenticatorKey key = createCredentials();
+                GoogleAuthenticatorKey key = createCredentials();
 
-        ICredentialRepository repository = getValidCredentialRepository();
-        return repository
-            .saveUserCredentials(
-                userName,
-                key.getKey(),
-                key.getVerificationCode(),
-                key.getScratchCodes()
-            )
-            .thenReturn(key);
+                ICredentialRepository repository = getValidCredentialRepository();
+                return repository
+                    .saveUserCredentials(
+                        userName,
+                        key.getKey(),
+                        key.getVerificationCode(),
+                        key.getScratchCodes()
+                    )
+                    .thenReturn(key);
+            })
+            .subscribeOn(scheduler);
     }
 
     public Mono<Integer> getTotpPasswordOfUser(String userName)
@@ -120,6 +127,7 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
         ICredentialRepository repository = getValidCredentialRepository();
 
         return repository.getSecretKey(userName)
+                         .publishOn(scheduler)
                          .map(sc -> calculateCode(
                              decodeSecret(sc),
                              getTimeWindowFromTime(time)
@@ -139,6 +147,7 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
         ICredentialRepository repository = getValidCredentialRepository();
 
         return repository.getSecretKey(userName)
+                         .publishOn(scheduler)
                          .map(sc -> authorize(sc, verificationCode, time));
     }
 
@@ -198,5 +207,18 @@ public final class GoogleAuthenticator extends BaseGoogleAuthenticator
     {
         this.credentialRepository = repository;
         this.credentialRepositorySearched = true;
+    }
+
+    /**
+     * Sets the {@link Scheduler} used by the {@link GoogleAuthenticator}.
+     * The default is {@code Schedulers.parallel()} because modern password encoding is
+     * a CPU intensive task that is non blocking. This means validation is bounded by the
+     * number of CPUs. Some applications may want to customize the {@link Scheduler}.
+     *
+     * @param scheduler the {@link Scheduler} to use. Cannot be null.
+     */
+    public void setScheduler(Scheduler scheduler) {
+        Objects.requireNonNull(scheduler, "scheduler cannot be null");
+        this.scheduler = scheduler;
     }
 }
