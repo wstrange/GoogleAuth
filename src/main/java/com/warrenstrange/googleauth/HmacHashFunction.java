@@ -30,9 +30,64 @@
 
 package com.warrenstrange.googleauth;
 
+import javax.crypto.Mac;
+import java.security.NoSuchAlgorithmException;
+
 public enum HmacHashFunction
 {
     HmacSHA1,
     HmacSHA256,
     HmacSHA512
+    ;
+
+    static Mac getInstance(HmacHashFunction hmacHashFunction) {
+        switch (hmacHashFunction) {
+            case HmacSHA1:
+                return HmacHashThreadLocals.hmacSHA1ThreadLocal.get();
+            case HmacSHA256:
+                return HmacHashThreadLocals.hmacSHA256ThreadLocal.get();
+            case HmacSHA512:
+                return HmacHashThreadLocals.hmacSHA512ThreadLocal.get();
+            default:
+                return HmacHashThreadLocals.hmacSHA1ThreadLocal.get();
+        }
+    }
+
+    private static class HmacHashThreadLocals {
+        static final ThreadLocal<Mac> hmacSHA1ThreadLocal = new ThreadLocal<Mac>() {
+            @Override
+            protected Mac initialValue() {
+                try {
+                    return Mac.getInstance(HmacSHA1.toString());
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+
+        static final ThreadLocal<Mac> hmacSHA256ThreadLocal = new ThreadLocal<Mac>() {
+            @Override
+            protected Mac initialValue() {
+                try {
+                    return Mac.getInstance(HmacSHA256.toString());
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+
+        static final ThreadLocal<Mac> hmacSHA512ThreadLocal = new ThreadLocal<Mac>() {
+            @Override
+            protected Mac initialValue() {
+                try {
+                    return Mac.getInstance(HmacSHA512.toString());
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+    }
 }

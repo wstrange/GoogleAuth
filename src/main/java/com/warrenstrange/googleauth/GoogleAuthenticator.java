@@ -140,6 +140,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
+    private static final String RANDOM_NUMBER_ALGORITHM =
+            System.getProperty(RNG_ALGORITHM, DEFAULT_RANDOM_NUMBER_ALGORITHM);
+
+    private static final String RANDOM_NUMBER_ALGORITHM_PROVIDER =
+            System.getProperty(RNG_ALGORITHM_PROVIDER, DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
+
     /**
      * The configuration used by the current instance.
      */
@@ -153,9 +159,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
-            getRandomNumberAlgorithm(),
-            getRandomNumberAlgorithmProvider());
+    private static final ThreadLocal<ReseedingSecureRandom> secureRandom = new ThreadLocal<ReseedingSecureRandom>() {
+        @Override
+        protected ReseedingSecureRandom initialValue() {
+            return new ReseedingSecureRandom(RANDOM_NUMBER_ALGORITHM, RANDOM_NUMBER_ALGORITHM_PROVIDER);
+        }
+    };
 
     private ICredentialRepository credentialRepository;
     private boolean credentialRepositorySearched;
@@ -181,9 +190,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private String getRandomNumberAlgorithm()
     {
-        return System.getProperty(
-                RNG_ALGORITHM,
-                DEFAULT_RANDOM_NUMBER_ALGORITHM);
+        return RANDOM_NUMBER_ALGORITHM;
     }
 
     /**
@@ -192,9 +199,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private String getRandomNumberAlgorithmProvider()
     {
-        return System.getProperty(
-                RNG_ALGORITHM_PROVIDER,
-                DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
+        return RANDOM_NUMBER_ALGORITHM_PROVIDER;
     }
 
     /**
@@ -226,7 +231,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         try
         {
             // Getting an HmacSHA1/HmacSHA256 algorithm implementation from the JCE.
-            Mac mac = Mac.getInstance(config.getHmacHashFunction().toString());
+            Mac mac = HmacHashFunction.getInstance(config.getHmacHashFunction());
 
             // Initializing the MAC algorithm.
             mac.init(signKey);
@@ -259,7 +264,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
             // Returning the validation code to the caller.
             return (int) truncatedHash;
         }
-        catch (NoSuchAlgorithmException | InvalidKeyException ex)
+        catch (InvalidKeyException ex)
         {
             // Logging the exception.
             LOGGER.log(Level.SEVERE, ex.getMessage(), ex);
@@ -343,7 +348,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         // the secret key and the scratch codes.
         byte[] buffer = new byte[SECRET_BITS / 8];
 
-        secureRandom.nextBytes(buffer);
+        secureRandom.get().nextBytes(buffer);
 
         // Extracting the bytes making up the secret key.
         byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
@@ -451,10 +456,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private int generateScratchCode()
     {
+        final ReseedingSecureRandom reseedingSecureRandom = secureRandom.get();
+
         while (true)
         {
             byte[] scratchCodeBuffer = new byte[BYTES_PER_SCRATCH_CODE];
-            secureRandom.nextBytes(scratchCodeBuffer);
+            reseedingSecureRandom.nextBytes(scratchCodeBuffer);
 
             int scratchCode = calculateScratchCode(scratchCodeBuffer);
 
