@@ -47,7 +47,7 @@ public final class GoogleAuthenticatorQRGenerator
      * The format string to generate the Google Chart HTTP API call.
      */
     private static final String TOTP_URI_FORMAT =
-            "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=%s";
+            "https://api.qrserver.com/v1/create-qr-code/?data=%s&size=200x200&ecc=M&margin=0";
 
     /**
      * This method wraps the invocation of <code>URLEncoder##encode</code>
