@@ -96,13 +96,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     private static final Logger LOGGER = Logger.getLogger(GoogleAuthenticator.class.getName());
 
     /**
-     * The number of bits of a secret key in binary form. Since the Base32
-     * encoding with 8 bit characters introduces an 160% overhead, we just need
-     * 80 bits (10 bytes) to generate a 16 bytes Base32-encoded secret key.
-     */
-    private static final int SECRET_BITS = 80;
-
-    /**
      * Number of digits of a scratch code represented as a decimal integer.
      */
     private static final int SCRATCH_CODE_LENGTH = 8;
@@ -340,13 +333,14 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public GoogleAuthenticatorKey createCredentials()
     {
         // Allocating a buffer sufficiently large to hold the bytes required by
-        // the secret key and the scratch codes.
-        byte[] buffer = new byte[SECRET_BITS / 8];
+        // the secret key.
+        int bufferSize = config.getSecretBits() / 8;
+        byte[] buffer = new byte[bufferSize];
 
         secureRandom.nextBytes(buffer);
 
         // Extracting the bytes making up the secret key.
-        byte[] secretKey = Arrays.copyOf(buffer, SECRET_BITS / 8);
+        byte[] secretKey = Arrays.copyOf(buffer, bufferSize);
         String generatedKey = calculateSecretKey(secretKey);
 
         // Generating the verification code at time = 0.
