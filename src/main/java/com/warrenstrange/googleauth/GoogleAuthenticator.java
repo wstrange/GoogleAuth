@@ -522,14 +522,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     @Override
     public boolean authorize(String secret, int verificationCode)
-            throws GoogleAuthenticatorException
     {
         return authorize(secret, verificationCode, new Date().getTime());
     }
 
     @Override
     public boolean authorize(String secret, int verificationCode, long time)
-            throws GoogleAuthenticatorException
     {
         // Checking user input and failing if the secret key was not provided.
         if (secret == null)
@@ -553,13 +551,12 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     @Override
     public boolean authorizeUser(String userName, int verificationCode)
-            throws GoogleAuthenticatorException
     {
         return authorizeUser(userName, verificationCode, new Date().getTime());
     }
 
     @Override
-    public boolean authorizeUser(String userName, int verificationCode, long time) throws GoogleAuthenticatorException
+    public boolean authorizeUser(String userName, int verificationCode, long time)
     {
         ICredentialRepository repository = getValidCredentialRepository();
 
