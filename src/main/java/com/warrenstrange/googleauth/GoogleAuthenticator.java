@@ -387,11 +387,15 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     private List<Integer> calculateScratchCodes()
     {
-        final List<Integer> scratchCodes = new ArrayList<>();
+        final int numberOfScratchCodes = config.getNumberOfScratchCodes();
+        final List<Integer> scratchCodes = new ArrayList<>(numberOfScratchCodes);
 
-        for (int i = 0; i < config.getNumberOfScratchCodes(); ++i)
+        if (numberOfScratchCodes > 0)
         {
-            scratchCodes.add(generateScratchCode());
+            for (int i = 0; i < numberOfScratchCodes; ++i)
+            {
+                scratchCodes.add(generateScratchCode());
+            }
         }
 
         return scratchCodes;

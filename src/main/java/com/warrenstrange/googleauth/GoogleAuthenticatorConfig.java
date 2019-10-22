@@ -159,9 +159,9 @@ public class GoogleAuthenticatorConfig
 
         public GoogleAuthenticatorConfigBuilder setNumberOfScratchCodes(int numberOfScratchCodes)
         {
-            if (numberOfScratchCodes < 1)
+            if (numberOfScratchCodes < 0)
             {
-                throw new IllegalArgumentException("The minimum number of scratch codes is 1");
+                throw new IllegalArgumentException("The number of scratch codes must not be negative");
             }
 
             if (numberOfScratchCodes > 1_000)
