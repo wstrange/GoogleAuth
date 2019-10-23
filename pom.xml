@@ -171,14 +171,15 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.1.1</version>
                         <!--
-                          This plugin chokes on self-closing tags, which are
-                          recreated automatically every time IDEA reformats the code.
+                          javadoc fails on jdk12 with "The code being documented uses modules but the packages defined
+                          in $URL are in the unnamed module."
+                          See https://bugs.openjdk.java.net/browse/JDK-8212233
                         -->
                         <configuration>
-                            <additionalparam>-Xdoclint:none</additionalparam>
+                            <source>8</source>
                         </configuration>
-                        <version>3.1.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
