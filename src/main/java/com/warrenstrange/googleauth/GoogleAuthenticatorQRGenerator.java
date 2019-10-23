@@ -67,7 +67,7 @@ public final class GoogleAuthenticatorQRGenerator
         }
         catch (UnsupportedEncodingException e)
         {
-            throw new RuntimeException("UTF-8 encoding is not supported by URLEncoder.", e);
+            throw new IllegalArgumentException("UTF-8 encoding is not supported by URLEncoder.", e);
         }
     }
 

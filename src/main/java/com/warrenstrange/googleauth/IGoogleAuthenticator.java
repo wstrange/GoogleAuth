@@ -115,8 +115,7 @@ public interface IGoogleAuthenticator
      *                                      functions provided by the JCE.
      * @see #authorize(String, int, long)
      */
-    boolean authorize(String secret, int verificationCode)
-            throws GoogleAuthenticatorException;
+    boolean authorize(String secret, int verificationCode);
 
     /**
      * Checks a verification code against a secret key using the specified time.
@@ -138,8 +137,7 @@ public interface IGoogleAuthenticator
      *                                      functions provided by the JCE.
      * @since 0.6.0
      */
-    boolean authorize(String secret, int verificationCode, long time)
-            throws GoogleAuthenticatorException;
+    boolean authorize(String secret, int verificationCode, long time);
 
     /**
      * This method validates a verification code of the specified user whose
@@ -155,8 +153,7 @@ public interface IGoogleAuthenticator
      * @throws GoogleAuthenticatorException if an unexpected error occurs.
      * @see #authorize(String, int)
      */
-    boolean authorizeUser(String userName, int verificationCode)
-            throws GoogleAuthenticatorException;
+    boolean authorizeUser(String userName, int verificationCode);
 
     /**
      * This method validates a verification code of the specified user whose
@@ -174,8 +171,7 @@ public interface IGoogleAuthenticator
      * @see #authorize(String, int)
      * @since 0.6.0
      */
-    boolean authorizeUser(String userName, int verificationCode, long time)
-            throws GoogleAuthenticatorException;
+    boolean authorizeUser(String userName, int verificationCode, long time);
 
     /**
      * This method returns the credential repository used by this instance, or
