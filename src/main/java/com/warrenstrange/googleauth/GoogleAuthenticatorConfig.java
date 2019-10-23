@@ -115,9 +115,9 @@ public class GoogleAuthenticatorConfig
     }
 
     /**
-     * Returns the number of bits of the secret keys to generate.  The length should always be a
-     * multiple of 8.  The default value is 80 bits for historical reasons and backwards
-     * compatibility.  RFC 4226 §4 requires 128 bits and recommends 160 bits.
+     * Returns the number of bits of the secret keys to generate.  The length
+     * should always be a multiple of 8.  The default value is 160 bits, and
+     * a value smaller than 128 is disallowed, as recommended by RFC 4226 §4.
      *
      * @return the secret size in bits.
      */
@@ -209,10 +209,11 @@ public class GoogleAuthenticatorConfig
 
         public GoogleAuthenticatorConfigBuilder setSecretBits(int secretBits)
         {
-            if (secretBits <= 0)
+            if (secretBits < 128)
             {
-                throw new IllegalArgumentException("Secret bits must be positive.");
+                throw new IllegalArgumentException("Secret bits must be greater than or equal to 128.");
             }
+
             if (secretBits % 8 != 0)
             {
                 throw new IllegalArgumentException("Secret bits must be a multiple of 8.");
