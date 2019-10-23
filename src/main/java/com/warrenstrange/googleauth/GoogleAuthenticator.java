@@ -45,12 +45,12 @@ import java.util.logging.Logger;
  * This class implements the functionality described in RFC 6238 (TOTP: Time
  * based one-time password algorithm) and has been tested again Google's
  * implementation of such algorithm in its Google Authenticator application.
- * <p/>
+ * <p>
  * This class lets users create a new 16-bit base32-encoded secret key with
  * the validation code calculated at {@code time = 0} (the UNIX epoch) and the
  * URL of a Google-provided QR barcode to let an user load the generated
  * information into Google Authenticator.
- * <p/>
+ * <p>
  * The random number generator used by this class uses the default algorithm and
  * provider.  Users can override them by setting the following system properties
  * to the algorithm and provider name of their choice:
@@ -58,19 +58,19 @@ import java.util.logging.Logger;
  * <li>{@link #RNG_ALGORITHM}.</li>
  * <li>{@link #RNG_ALGORITHM_PROVIDER}.</li>
  * </ul>
- * <p/>
+ * <p>
  * This class does not store in any way either the generated keys nor the keys
  * passed during the authorization process.
- * <p/>
+ * <p>
  * Java Server side class for Google Authenticator's TOTP generator was inspired
  * by an author's blog post.
  *
  * @author Enrico M. Crisostomo
  * @author Warren Strange
  * @version 1.1.4
- * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html" />
- * @see <a href="http://code.google.com/p/google-authenticator" />
- * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt" />
+ * @see <a href="http://thegreyblog.blogspot.com/2011/12/google-authenticator-using-it-in-your.html"></a>
+ * @see <a href="http://code.google.com/p/google-authenticator"></a>
+ * @see <a href="http://tools.ietf.org/id/draft-mraihi-totp-timebased-06.txt"></a>
  * @since 0.3.0
  */
 public final class GoogleAuthenticator implements IGoogleAuthenticator

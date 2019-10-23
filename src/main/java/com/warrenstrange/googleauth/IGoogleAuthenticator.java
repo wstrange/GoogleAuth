@@ -43,7 +43,7 @@ public interface IGoogleAuthenticator
      * <li>Validation code.</li>
      * <li>A list of scratch codes.</li>
      * </ol>
-     * <p/>
+     * <p>
      * The user must register this secret on their device.
      *
      * @return secret key
@@ -55,7 +55,7 @@ public interface IGoogleAuthenticator
      * <code>#createCredentials</code> method with no arguments. The generated
      * credentials are then saved using the configured
      * <code>#ICredentialRepository</code> service.
-     * <p/>
+     * <p>
      * The user must register this secret on their device.
      *
      * @param userName the user name.
@@ -122,7 +122,7 @@ public interface IGoogleAuthenticator
      * Checks a verification code against a secret key using the specified time.
      * The algorithm also checks in a time window whose size determined by the
      * {@code windowSize} property of this class.
-     * <p/>
+     * <p>
      * The default value of 30 seconds recommended by RFC 6238 is used for the
      * interval size.
      *

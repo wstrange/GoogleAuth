@@ -82,7 +82,7 @@ public final class GoogleAuthenticatorQRGenerator
      * url-encoded colon, and optional spaces may precede the account name.
      * Neither issuer nor account name may themselves contain a colon.
      * Represented in ABNF according to RFC 5234:
-     * <p/>
+     * <p>
      * label = accountname / issuer (“:” / “%3A”) *”%20” accountname
      *
      * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
@@ -117,7 +117,7 @@ public final class GoogleAuthenticatorQRGenerator
      * be loaded into the Google Authenticator application.  The user scans this
      * bar code with the application on their smart phones or enters the
      * secret manually.
-     * <p/>
+     * <p>
      * The current implementation supports the following features:
      * <ul>
      * <li>Label, made up of an optional issuer and an account name.</li>
@@ -146,7 +146,7 @@ public final class GoogleAuthenticatorQRGenerator
     /**
      * Returns the basic otpauth TOTP URI. This URI might be sent to the user via email, QR code or some other method.
      * Use a secure transport since this URI contains the secret.
-     * <p/>
+     * <p>
      * The current implementation supports the following features:
      * <ul>
      * <li>Label, made up of an optional issuer and an account name.</li>
