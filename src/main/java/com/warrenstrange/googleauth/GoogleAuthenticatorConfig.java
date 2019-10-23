@@ -39,6 +39,7 @@ public class GoogleAuthenticatorConfig
     private int codeDigits = 6;
     private int numberOfScratchCodes = 5;
     private int keyModulus = (int) Math.pow(10, codeDigits);
+    private int secretBits = 80;
     private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;
     private HmacHashFunction hmacHashFunction = HmacHashFunction.HmacSHA1;
 
@@ -111,6 +112,17 @@ public class GoogleAuthenticatorConfig
     public int getWindowSize()
     {
         return windowSize;
+    }
+
+    /**
+     * Returns the number of bits of the secret keys to generate.  The length should always be a
+     * multiple of 8.  The default value is 80 bits for historical reasons and backwards
+     * compatibility.  RFC 4226 §4 requires 128 bits and recommends 160 bits.
+     *
+     * @return the secret size in bits.
+     */
+    public int getSecretBits() {
+        return secretBits;
     }
 
     /**
@@ -192,6 +204,21 @@ public class GoogleAuthenticatorConfig
             }
 
             config.windowSize = windowSize;
+            return this;
+        }
+
+        public GoogleAuthenticatorConfigBuilder setSecretBits(int secretBits)
+        {
+            if (secretBits <= 0)
+            {
+                throw new IllegalArgumentException("Secret bits must be positive.");
+            }
+            if (secretBits % 8 != 0)
+            {
+                throw new IllegalArgumentException("Secret bits must be a multiple of 8.");
+            }
+
+            config.secretBits = secretBits;
             return this;
         }
 
