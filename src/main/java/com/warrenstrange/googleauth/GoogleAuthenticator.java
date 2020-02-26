@@ -133,6 +133,10 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
+    private String randomNumberAlgorithm;
+
+    private String randomNumberAlgorithmProvider;
+
     /**
      * The configuration used by the current instance.
      */
@@ -156,6 +160,9 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     public GoogleAuthenticator()
     {
         config = new GoogleAuthenticatorConfig();
+
+        this.randomNumberAlgorithmProvider = DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER;
+        this.randomNumberAlgorithm = DEFAULT_RANDOM_NUMBER_ALGORITHM;
     }
 
     public GoogleAuthenticator(GoogleAuthenticatorConfig config)
@@ -166,6 +173,28 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         }
 
         this.config = config;
+
+        this.randomNumberAlgorithmProvider = DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER;
+        this.randomNumberAlgorithm = DEFAULT_RANDOM_NUMBER_ALGORITHM;
+    }
+
+    public GoogleAuthenticator(final String randomNumberAlgorithmProvider, final String randomNumberAlgorithm) {
+        config = new GoogleAuthenticatorConfig();
+        this.randomNumberAlgorithm = randomNumberAlgorithm;
+        this.randomNumberAlgorithmProvider = randomNumberAlgorithmProvider;
+    }
+
+    public GoogleAuthenticator(GoogleAuthenticatorConfig config, final String randomNumberAlgorithmProvider, final String randomNumberAlgorithm)
+    {
+        if (config == null)
+        {
+            throw new IllegalArgumentException("Configuration cannot be null.");
+        }
+
+        this.config = config;
+
+        this.randomNumberAlgorithm = randomNumberAlgorithm;
+        this.randomNumberAlgorithmProvider = randomNumberAlgorithmProvider;
     }
 
     /**
@@ -176,7 +205,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     {
         return System.getProperty(
                 RNG_ALGORITHM,
-                DEFAULT_RANDOM_NUMBER_ALGORITHM);
+                this.randomNumberAlgorithm);
     }
 
     /**
@@ -187,7 +216,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     {
         return System.getProperty(
                 RNG_ALGORITHM_PROVIDER,
-                DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
+                this.randomNumberAlgorithmProvider);
     }
 
     /**
