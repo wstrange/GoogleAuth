@@ -133,9 +133,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
-    private String randomNumberAlgorithm;
-
-    private String randomNumberAlgorithmProvider;
 
     /**
      * The configuration used by the current instance.
@@ -150,9 +147,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
-            getRandomNumberAlgorithm(),
-            getRandomNumberAlgorithmProvider());
+    private ReseedingSecureRandom secureRandom;
 
     private ICredentialRepository credentialRepository;
     private boolean credentialRepositorySearched;
@@ -161,8 +156,10 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     {
         config = new GoogleAuthenticatorConfig();
 
-        this.randomNumberAlgorithmProvider = DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER;
-        this.randomNumberAlgorithm = DEFAULT_RANDOM_NUMBER_ALGORITHM;
+
+        this.secureRandom = new ReseedingSecureRandom(
+                getRandomNumberAlgorithm(),
+                getRandomNumberAlgorithmProvider());
     }
 
     public GoogleAuthenticator(GoogleAuthenticatorConfig config)
@@ -174,14 +171,28 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
         this.config = config;
 
-        this.randomNumberAlgorithmProvider = DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER;
-        this.randomNumberAlgorithm = DEFAULT_RANDOM_NUMBER_ALGORITHM;
+        this.secureRandom = new ReseedingSecureRandom(
+                getRandomNumberAlgorithm(),
+                getRandomNumberAlgorithmProvider()
+        );
     }
 
-    public GoogleAuthenticator(final String randomNumberAlgorithmProvider, final String randomNumberAlgorithm) {
+    public GoogleAuthenticator(final String randomNumberAlgorithm, final String randomNumberAlgorithmProvider)
+    {
         config = new GoogleAuthenticatorConfig();
-        this.randomNumberAlgorithm = randomNumberAlgorithm;
-        this.randomNumberAlgorithmProvider = randomNumberAlgorithmProvider;
+
+        if (randomNumberAlgorithm == null && randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom();
+        }
+        else if (randomNumberAlgorithm == null)
+        {
+            throw new IllegalArgumentException("RandomNumberAlgorithm must not be null. If the RandomNumberAlgorithm is null, the RandomNumberAlgorithmProvider must also be null.");
+        }
+        else if (randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom(randomNumberAlgorithm);
+        }
     }
 
     public GoogleAuthenticator(GoogleAuthenticatorConfig config, final String randomNumberAlgorithmProvider, final String randomNumberAlgorithm)
@@ -193,31 +204,57 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
         this.config = config;
 
-        this.randomNumberAlgorithm = randomNumberAlgorithm;
-        this.randomNumberAlgorithmProvider = randomNumberAlgorithmProvider;
+        if (randomNumberAlgorithm == null && randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom();
+        }
+        else if (randomNumberAlgorithm == null)
+        {
+            throw new IllegalArgumentException("RandomNumberAlgorithm must not be null. If the RandomNumberAlgorithm is null, the RandomNumberAlgorithmProvider must also be null.");
+        }
+        else if (randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom(randomNumberAlgorithm);
+        }
     }
 
     /**
-     * @return the random number generator algorithm.
+     * @return the default random number generator algorithm.
      * @since 0.5.0
      */
     private String getRandomNumberAlgorithm()
     {
         return System.getProperty(
                 RNG_ALGORITHM,
-                this.randomNumberAlgorithm);
+                DEFAULT_RANDOM_NUMBER_ALGORITHM);
+    }
+
+    private String getRandomNumberAlgorithm(final String algorithm) {
+        return System.getProperty(
+                RNG_ALGORITHM,
+                algorithm
+        );
     }
 
     /**
-     * @return the random number generator algorithm provider.
+     * @return the default random number generator algorithm provider.
      * @since 0.5.0
      */
     private String getRandomNumberAlgorithmProvider()
     {
         return System.getProperty(
                 RNG_ALGORITHM_PROVIDER,
-                this.randomNumberAlgorithmProvider);
+                DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
     }
+
+    private String getRandomNumberAlgorithmProvider(final String algorithmProvider) {
+        return System.getProperty(
+                RNG_ALGORITHM_PROVIDER,
+                algorithmProvider
+        );
+    }
+
+
 
     /**
      * Calculates the verification code of the provided key at the specified
