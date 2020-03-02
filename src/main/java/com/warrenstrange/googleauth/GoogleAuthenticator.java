@@ -155,7 +155,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     {
         config = new GoogleAuthenticatorConfig();
 
-
         this.secureRandom = new ReseedingSecureRandom(
                 getRandomNumberAlgorithm(),
                 getRandomNumberAlgorithmProvider());
