@@ -43,7 +43,6 @@ class ReseedingSecureRandom
     private final AtomicInteger count = new AtomicInteger(0);
     private volatile SecureRandom secureRandom;
 
-    @SuppressWarnings("UnusedDeclaration")
     ReseedingSecureRandom()
     {
         this.algorithm = null;
@@ -52,7 +51,6 @@ class ReseedingSecureRandom
         buildSecureRandom();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     ReseedingSecureRandom(String algorithm)
     {
         if (algorithm == null)

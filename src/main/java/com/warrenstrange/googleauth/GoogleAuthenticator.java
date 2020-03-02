@@ -133,7 +133,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      */
     private static final String DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER = "SUN";
 
-
     /**
      * The configuration used by the current instance.
      */
@@ -227,13 +226,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         return System.getProperty(
                 RNG_ALGORITHM,
                 DEFAULT_RANDOM_NUMBER_ALGORITHM);
-    }
-
-    private String getRandomNumberAlgorithm(final String algorithm) {
-        return System.getProperty(
-                RNG_ALGORITHM,
-                algorithm
-        );
     }
 
     /**
