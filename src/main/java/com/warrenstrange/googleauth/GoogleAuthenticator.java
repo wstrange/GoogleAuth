@@ -239,15 +239,6 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
                 DEFAULT_RANDOM_NUMBER_ALGORITHM_PROVIDER);
     }
 
-    private String getRandomNumberAlgorithmProvider(final String algorithmProvider) {
-        return System.getProperty(
-                RNG_ALGORITHM_PROVIDER,
-                algorithmProvider
-        );
-    }
-
-
-
     /**
      * Calculates the verification code of the provided key at the specified
      * instant of time using the algorithm specified in RFC 6238.
