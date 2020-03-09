@@ -177,23 +177,11 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
 
     public GoogleAuthenticator(final String randomNumberAlgorithm, final String randomNumberAlgorithmProvider)
     {
-        config = new GoogleAuthenticatorConfig();
+        this(new GoogleAuthenticatorConfig(), randomNumberAlgorithm, randomNumberAlgorithmProvider);
 
-        if (randomNumberAlgorithm == null && randomNumberAlgorithmProvider == null)
-        {
-            this.secureRandom = new ReseedingSecureRandom();
-        }
-        else if (randomNumberAlgorithm == null)
-        {
-            throw new IllegalArgumentException("RandomNumberAlgorithm must not be null. If the RandomNumberAlgorithm is null, the RandomNumberAlgorithmProvider must also be null.");
-        }
-        else if (randomNumberAlgorithmProvider == null)
-        {
-            this.secureRandom = new ReseedingSecureRandom(randomNumberAlgorithm);
-        }
     }
 
-    public GoogleAuthenticator(GoogleAuthenticatorConfig config, final String randomNumberAlgorithmProvider, final String randomNumberAlgorithm)
+    public GoogleAuthenticator(GoogleAuthenticatorConfig config, final String randomNumberAlgorithm, final String randomNumberAlgorithmProvider)
     {
         if (config == null)
         {
