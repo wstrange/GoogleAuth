@@ -77,8 +77,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <commons-codec.version>1.14</commons-codec.version>
         <enforcer.plugin.version>3.0.0-M3</enforcer.plugin.version>
+        <httpclient.version>4.5.12</httpclient.version>
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
+        <junit.version>4.13</junit.version>
         <source.plugin.version>3.2.1</source.plugin.version>
     </properties>
 
@@ -86,18 +89,18 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.13</version>
+            <version>${commons-codec.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.10</version>
+            <version>${httpclient.version}</version>
         </dependency>
     </dependencies>
 
