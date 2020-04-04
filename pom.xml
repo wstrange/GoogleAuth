@@ -77,7 +77,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <enforcer.version>3.0.0-M3</enforcer.version>
+        <enforcer.plugin.version>3.0.0-M3</enforcer.plugin.version>
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
         <source.plugin.version>3.2.1</source.plugin.version>
     </properties>
@@ -120,7 +120,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>${enforcer.version}</version>
+                <version>${enforcer.plugin.version}</version>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>
@@ -148,7 +148,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-enforcer-plugin</artifactId>
-                        <version>${enforcer.version}</version>
+                        <version>${enforcer.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>enforce-no-snapshots</id>
