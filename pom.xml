@@ -78,6 +78,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <enforcer.version>3.0.0-M3</enforcer.version>
+        <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
+        <source.plugin.version>3.2.1</source.plugin.version>
     </properties>
 
     <dependencies>
@@ -179,7 +181,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>${source.plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -192,7 +194,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.1</version>
+                        <version>${javadoc.plugin.version}</version>
                         <!--
                           javadoc fails on jdk12 with "The code being documented uses modules but the packages defined
                           in $URL are in the unnamed module."
