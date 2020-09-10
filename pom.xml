@@ -83,6 +83,7 @@
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
         <junit.version>4.13</junit.version>
         <source.plugin.version>3.2.1</source.plugin.version>
+        <zxing.version>3.4.0</zxing.version>
     </properties>
 
     <dependencies>
@@ -101,6 +102,16 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${zxing.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>${zxing.version}</version>
         </dependency>
     </dependencies>
 
