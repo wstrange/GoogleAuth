@@ -146,18 +146,28 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
      * that it is expected to work correctly in previous versions of the Java
      * platform as well.
      */
-    private ReseedingSecureRandom secureRandom = new ReseedingSecureRandom(
-            getRandomNumberAlgorithm(),
-            getRandomNumberAlgorithmProvider());
+    private ReseedingSecureRandom secureRandom;
 
     private ICredentialRepository credentialRepository;
     private boolean credentialRepositorySearched;
 
+    /**
+     * The constructor that uses the default config, random number algorithm, and random number algorithm provider.
+     */
     public GoogleAuthenticator()
     {
         config = new GoogleAuthenticatorConfig();
+
+        this.secureRandom = new ReseedingSecureRandom(
+                getRandomNumberAlgorithm(),
+                getRandomNumberAlgorithmProvider());
     }
 
+    /**
+     * The constructor that allows a user to specify the config and uses the default randomNumberAlgorithm and randomNumberAlgorithmProvider.
+     *
+     * @param config The configuration used by the current instance.
+     */
     public GoogleAuthenticator(GoogleAuthenticatorConfig config)
     {
         if (config == null)
@@ -166,10 +176,57 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
         }
 
         this.config = config;
+
+        this.secureRandom = new ReseedingSecureRandom(
+                getRandomNumberAlgorithm(),
+                getRandomNumberAlgorithmProvider()
+        );
     }
 
     /**
-     * @return the random number generator algorithm.
+     * The constructor that allows a user the randomNumberAlgorithm, the randomNumberAlgorithmProvider, and uses the default config.
+     *
+     * @param randomNumberAlgorithm The random number algorithm to define the secure random number generator. If this is null the randomNumberAlgorithmProvider must be null.
+     * @param randomNumberAlgorithmProvider The random number algorithm provider to define the secure random number generator. This value may be null.
+     */
+    public GoogleAuthenticator(final String randomNumberAlgorithm, final String randomNumberAlgorithmProvider)
+    {
+        this(new GoogleAuthenticatorConfig(), randomNumberAlgorithm, randomNumberAlgorithmProvider);
+
+    }
+
+    /**
+     * The constructor that allows a user to specify the config, the randomNumberAlgorithm, and the randomNumberAlgorithmProvider.
+     *
+     * @param config The configuration used by the current instance.
+     * @param randomNumberAlgorithm The random number algorithm to define the secure random number generator. If this is null the randomNumberAlgorithmProvider must be null.
+     * @param randomNumberAlgorithmProvider The random number algorithm provider to define the secure random number generator. This value may be null.
+     */
+    public GoogleAuthenticator(GoogleAuthenticatorConfig config, final String randomNumberAlgorithm, final String randomNumberAlgorithmProvider)
+    {
+        if (config == null)
+        {
+            throw new IllegalArgumentException("Configuration cannot be null.");
+        }
+
+        this.config = config;
+
+        if (randomNumberAlgorithm == null && randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom();
+        }
+        else if (randomNumberAlgorithm == null)
+        {
+            throw new IllegalArgumentException("RandomNumberAlgorithm must not be null. If the RandomNumberAlgorithm is null, the RandomNumberAlgorithmProvider must also be null.");
+        }
+        else if (randomNumberAlgorithmProvider == null)
+        {
+            this.secureRandom = new ReseedingSecureRandom(randomNumberAlgorithm);
+        }
+    }
+
+    /**
+     * @return the default random number generator algorithm.
      * @since 0.5.0
      */
     private String getRandomNumberAlgorithm()
@@ -180,7 +237,7 @@ public final class GoogleAuthenticator implements IGoogleAuthenticator
     }
 
     /**
-     * @return the random number generator algorithm provider.
+     * @return the default random number generator algorithm provider.
      * @since 0.5.0
      */
     private String getRandomNumberAlgorithmProvider()

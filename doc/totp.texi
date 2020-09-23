@@ -271,7 +271,8 @@ available on Oracle Java runtime environments and they were not tested on other
 implementations where they are likely to be missing.
 
 Users can configure the library to use an alternate provider and algorithm by
-providing their names as values of the following system properties:
+providing their names as values of the following system properties or they can
+specify this in the @code{GoogleAuthenticator} constructor:
 
 @table @command
 @item com.warrenstrange.googleauth.rng.algorithm
@@ -594,9 +595,8 @@ values specified in @acronym{RFC 6238}.  Specifically, this class uses:
 @item
 The @acronym{HMAC-SHA-1} algorithm is used, as specified by @acronym{RFC} 4226.
 @acronym{RFC} 6238 specifies that implementors @emph{may} also use
-@acronym{HMAC-SHA-256} and @acronym{HMAC-SHA-512} but, although the code already
-supports them, currently there is no way to override the usage of
-@acronym{HMAC-SHA-1}.
+@acronym{HMAC-SHA-256} and @acronym{HMAC-SHA-512} and can be used by specifying them
+in the constructor of @code{GoogleAuthenticator}.
 
 @item
 A time-step size of 30 seconds is used, as recommended in by @acronym{RFC} 6238.

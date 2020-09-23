@@ -192,6 +192,14 @@ public class GoogleAuthTest
     }
 
     @Test
+    public void createAndAuthenticateNullAlgorithm() {
+        final GoogleAuthenticator ga = new GoogleAuthenticator(null, null);
+        final GoogleAuthenticatorKey key = ga.createCredentials();
+
+        assertTrue(ga.authorize(key.getKey(), ga.getTotpPassword(key.getKey())));
+    }
+
+    @Test
     public void createCredentialsForUser()
     {
         GoogleAuthenticator googleAuthenticator = new GoogleAuthenticator();
