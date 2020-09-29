@@ -30,8 +30,17 @@
 
 package com.warrenstrange.googleauth;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
 import org.apache.http.client.utils.URIBuilder;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
@@ -132,7 +141,11 @@ public final class GoogleAuthenticatorQRGenerator
      * @return the Google Chart API call URL to generate a QR code containing
      * the provided information.
      * @see <a href="https://code.google.com/p/google-authenticator/wiki/KeyUriFormat">Google Authenticator - KeyUriFormat</a>
+     *
+     * @deprecated this method is deprecated in favor of {@link GoogleAuthenticatorQRGenerator#getOtpAuthQrByteArrayOutputStream}
+     * which does make user send secret over wire (generated URL by this method does that)
      */
+    @Deprecated
     public static String getOtpAuthURL(String issuer,
                                        String accountName,
                                        GoogleAuthenticatorKey credentials)
@@ -141,6 +154,44 @@ public final class GoogleAuthenticatorQRGenerator
         return String.format(
                 TOTP_URI_FORMAT,
                 internalURLEncode(getOtpAuthTotpURL(issuer, accountName, credentials)));
+    }
+
+    /**
+     * Returns a {@link ByteArrayOutputStream} that contains a QR code that was generated locally
+     * and which can be loaded into the Google Authenticator application.  The user scans this
+     * bar code with the application on their smart phones.
+     * <p>
+     * The current implementation supports the following features:
+     * <ul>
+     * <li>Label, made up of an optional issuer and an account name.</li>
+     * <li>Secret parameter.</li>
+     * <li>Issuer parameter.</li>
+     * </ul>
+     *
+     * @param issuer      The issuer name. This parameter cannot contain the colon
+     *                    (:) character. This parameter can be null.
+     * @param accountName The account name. This parameter shall not be null.
+     * @param credentials The generated credentials.  This parameter shall not be null.
+     * @return a byte array stream that contains a QR code image
+     * @throws IOException in case when buffered image could not be written into byte array stream
+     * @throws WriterException in case when QR bit matrix could not be prepared
+     */
+    public static ByteArrayOutputStream getOtpAuthQrByteArrayOutputStream(String issuer,
+                                                                          String accountName,
+                                                                          GoogleAuthenticatorKey credentials)
+            throws IOException, WriterException
+    {
+        String otpAuthUri = getOtpAuthTotpURL(issuer, accountName, credentials);
+
+        QRCodeWriter qrWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrWriter.encode(otpAuthUri, BarcodeFormat.QR_CODE, 200, 200);
+
+        BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "png", outputStream);
+
+        return outputStream;
     }
 
     /**
