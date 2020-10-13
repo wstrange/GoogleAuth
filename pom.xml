@@ -81,7 +81,7 @@
         <enforcer.plugin.version>3.0.0-M3</enforcer.plugin.version>
         <httpclient.version>4.5.12</httpclient.version>
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
-        <junit.version>4.13</junit.version>
+        <junit.version>4.13.1</junit.version>
         <source.plugin.version>3.2.1</source.plugin.version>
     </properties>
 
