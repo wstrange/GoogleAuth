@@ -79,7 +79,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <commons-codec.version>1.14</commons-codec.version>
         <enforcer.plugin.version>3.0.0-M3</enforcer.plugin.version>
-        <httpclient.version>4.5.12</httpclient.version>
+        <httpclient.version>4.5.13</httpclient.version>
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
         <junit.version>4.13</junit.version>
         <source.plugin.version>3.2.1</source.plugin.version>
