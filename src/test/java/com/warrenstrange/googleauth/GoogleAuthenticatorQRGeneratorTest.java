@@ -60,7 +60,7 @@ public class GoogleAuthenticatorQRGeneratorTest
     @Test
     public void testGetOtpAuthURL() throws Exception
     {
-        assertEquals("https://api.qrserver.com/v1/create-qr-code/?data=otpauth%3A%2F%2Ftotp%2FAcme%3Aalice%40example.com%3Fsecret%3DsecretKey%26issuer%3DAcme%26algorithm%3DSHA1%26digits%3D6%26period%3D30&size=200x200&ecc=M&margin=0", GoogleAuthenticatorQRGenerator.getOtpAuthURL("Acme", "alice@example.com", credentials));
+        assertEquals("https://api.qrserver.com/v1/create-qr-code/?data=otpauth%3A%2F%2Ftotp%2FAcme%3Aalice%40example.com%3Fsecret%3DsecretKey%26issuer%3DAcme%26algorithm%3DSHA1%26digits%3D6%26period%3D30&size=200x200&ecc=M&margin=10", GoogleAuthenticatorQRGenerator.getOtpAuthURL("Acme", "alice@example.com", credentials));
     }
 
     @Test
