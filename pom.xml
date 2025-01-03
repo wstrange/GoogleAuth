@@ -77,11 +77,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <commons-codec.version>1.14</commons-codec.version>
+        <commons-codec.version>1.17.1</commons-codec.version>
         <enforcer.plugin.version>3.0.0-M3</enforcer.plugin.version>
-        <httpclient.version>4.5.13</httpclient.version>
+        <httpclient.version>4.5.14</httpclient.version>
         <javadoc.plugin.version>3.2.0</javadoc.plugin.version>
-        <junit.version>4.13.1</junit.version>
+        <junit.version>4.13.2</junit.version>
         <source.plugin.version>3.2.1</source.plugin.version>
     </properties>
 
@@ -111,8 +111,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>
